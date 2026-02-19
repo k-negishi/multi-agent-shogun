@@ -1,57 +1,56 @@
-# Template: Analysis Integration (TMPL-INTEG-ANALYSIS)
+# テンプレート: 分析統合（TMPL-INTEG-ANALYSIS）
 
-> **Use when**: Integrating analytical reports that use different frameworks,
-> methodologies, or data sources to examine the same topic.
+> **使用タイミング**: 同じトピックを調査するために異なるフレームワーク、方法論、またはデータソースを使用する分析報告を統合する場合。
 
-## Pre-Integration Checklist
+## 統合前チェックリスト
 
-- [ ] Identify the analytical framework used by each input
-- [ ] Extract key findings and their supporting evidence
-- [ ] Check for contradictory conclusions from different frameworks
-- [ ] Reconcile methodology differences before synthesizing
+- [ ] 各入力が使用する分析フレームワークを識別
+- [ ] 主要発見とその裏付けエビデンスを抽出
+- [ ] 異なるフレームワークからの矛盾する結論をチェック
+- [ ] 統合前に方法論の違いを調整
 
-## Framework Comparison Template
+## フレームワーク比較テンプレート
 
-| Dimension | Report A | Report B | Report C |
+| 次元 | 報告A | 報告B | 報告C |
 |-----------|----------|----------|----------|
-| Framework/Method | ... | ... | ... |
-| Data Sources | ... | ... | ... |
-| Key Finding 1 | ... | ... | ... |
-| Key Finding 2 | ... | ... | ... |
-| Conclusion | ... | ... | ... |
+| フレームワーク/方法 | ... | ... | ... |
+| データソース | ... | ... | ... |
+| 主要発見1 | ... | ... | ... |
+| 主要発見2 | ... | ... | ... |
+| 結論 | ... | ... | ... |
 
-## Tension Detection
+## 緊張検出
 
-When different analyses reach different conclusions:
+異なる分析が異なる結論に達した場合:
 
-1. **Check if the difference is due to different frameworks** — both may be valid from their perspective
-2. **Check if the difference is due to different data** — one may have more complete information
-3. **Check if the difference is a genuine disagreement** — requires deeper analysis
+1. **差異が異なるフレームワークによるものかチェック** — 両方がその視点から有効な可能性
+2. **差異が異なるデータによるものかチェック** — 一方がより完全な情報を持つ可能性
+3. **差異が真の意見の相違かチェック** — より深い分析が必要
 
-## Integration Approach
+## 統合アプローチ
 
-1. **Map each analysis to a common structure** (findings → evidence → conclusion)
-2. **Identify convergent findings** — where analyses agree, confidence is high
-3. **Identify divergent findings** — examine why and which is more robust
-4. **Synthesize** — create a unified analysis that acknowledges multiple perspectives
+1. **各分析を共通構造にマッピング**（発見 → エビデンス → 結論）
+2. **収束する発見を識別** — 分析が一致する箇所、信頼度が高い
+3. **発散する発見を識別** — なぜか、どちらがより堅牢かを調査
+4. **統合** — 複数の視点を認識する統一分析を作成
 
-## Output Structure
+## 出力構造
 
 ```markdown
-## Methodology Comparison
-[Framework comparison table]
+## 方法論比較
+[フレームワーク比較表]
 
-## Convergent Findings (High Confidence)
-- [Finding]: Supported by [Report A, B, C]
+## 収束する発見（高信頼度）
+- [発見]: [報告A, B, C]で裏付けられる
 
-## Divergent Findings (Requires Judgment)
-- [Topic]: Report A says X, Report B says Y
-  - Reason for divergence: [different data / different framework / genuine disagreement]
-  - Recommended position: [X / Y / nuanced synthesis]
+## 発散する発見（判断必要）
+- [トピック]: 報告AはXと述べ、報告BはYと述べる
+  - 発散の理由: [異なるデータ / 異なるフレームワーク / 真の意見相違]
+  - 推奨立場: [X / Y / 微妙な統合]
 
-## Integrated Analysis
-[Unified narrative incorporating all perspectives]
+## 統合分析
+[すべての視点を組み込んだ統一ナラティブ]
 
-## Limitations
-[Gaps, assumptions, areas needing further research]
+## 制限
+[ギャップ、前提、さらなる調査が必要な領域]
 ```

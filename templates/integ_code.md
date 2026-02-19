@@ -1,41 +1,40 @@
-# Template: Code Integration (TMPL-INTEG-CODE)
+# テンプレート: コード統合（TMPL-INTEG-CODE）
 
-> **Use when**: Integrating code changes from multiple agents working on different
-> parts of the same codebase. Contradiction detection is primarily test-driven.
+> **使用タイミング**: 同じコードベースの異なる部分で作業している複数エージェントからのコード変更を統合する場合。矛盾検出は主にテスト駆動。
 
-## Pre-Integration Checklist
+## 統合前チェックリスト
 
-- [ ] Review all modified files for overlap (same file touched by multiple agents)
-- [ ] Check for conflicting imports, type definitions, or API signatures
-- [ ] Run existing tests to establish baseline
-- [ ] Merge changes and resolve any git conflicts
-- [ ] Run full test suite after merge
-- [ ] Check for runtime conflicts (same resource, port, config key, etc.)
+- [ ] 重複（複数エージェントが同じファイルをタッチ）についてすべての修正ファイルをレビュー
+- [ ] 矛盾するimport、型定義、またはAPIシグネチャをチェック
+- [ ] 既存テストを実行してベースラインを確立
+- [ ] 変更をマージしgit競合を解決
+- [ ] マージ後にフルテストスイートを実行
+- [ ] ランタイム競合（同じリソース、ポート、設定キー等）をチェック
 
-## Conflict Detection Approach
+## 矛盾検出アプローチ
 
-Code integration relies on **automated tooling** rather than manual fact-checking:
+コード統合は手動の事実確認ではなく**自動ツール**に依存:
 
-| Check | Tool | When |
+| チェック | ツール | タイミング |
 |-------|------|------|
-| File overlap | `git diff --name-only` comparison | Before merge |
-| Type/API conflicts | TypeScript/linter | After merge |
-| Logic conflicts | Test suite | After merge |
-| Runtime conflicts | Manual review of config/env | After merge |
+| ファイル重複 | `git diff --name-only` 比較 | マージ前 |
+| 型/API矛盾 | TypeScript/linter | マージ後 |
+| ロジック矛盾 | テストスイート | マージ後 |
+| ランタイム矛盾 | config/env の手動レビュー | マージ後 |
 
-## Integration Steps
+## 統合ステップ
 
-1. **List all files modified** by each agent
-2. **Identify overlapping files** — these need manual review
-3. **Merge non-overlapping changes** first
-4. **Resolve overlapping files** — understand intent of each change
-5. **Run tests** — fix any failures
-6. **Verify integration** — does the combined result meet the original cmd objective?
+1. **各エージェントが修正したすべてのファイルをリスト化**
+2. **重複ファイルを識別** — これらは手動レビューが必要
+3. **非重複変更をまずマージ**
+4. **重複ファイルを解決** — 各変更の意図を理解
+5. **テストを実行** — 任意の失敗を修正
+6. **統合を検証** — 統合結果が元のcmd目標を満たすか？
 
-## Output
+## 出力
 
-The integrated codebase itself is the deliverable. Report should include:
-- Files merged
-- Conflicts resolved (if any)
-- Test results
-- Any remaining issues or TODOs
+統合されたコードベース自体が成果物。報告に含めるべき内容:
+- マージされたファイル
+- 解決された競合（あれば）
+- テスト結果
+- 残存する問題またはTODO

@@ -1,60 +1,60 @@
-# Philosophy
+# 哲学
 
-> "Don't execute tasks mindlessly. Always keep 'fastest × best output' in mind."
+> 「タスクを盲目的に実行するな。常に『最速 × 最高出力』を念頭に置け。」
 
-## Five Core Principles
+## 五つのコア原則
 
-### 1. Autonomous Formation Design
+### 1. 自律的フォーメーション設計
 
-Design task formations based on complexity, not templates. A simple file rename doesn't need 8 Ashigaru. A complex refactor across 20 files does. The Karo analyzes each command and decides the optimal formation — sometimes 1 Ashigaru, sometimes all 8 in parallel with dependency chains.
+テンプレートではなく複雑さに基づいてタスクフォーメーションを設計せよ。単純なファイルリネームに8人の足軽は不要。20ファイル横断の複雑なリファクタリングには必要。家老は各コマンドを分析し最適なフォーメーションを決定 — 時には1足軽、時には依存チェーン付きで全8足軽を並列に。
 
-### 2. Parallelization
+### 2. 並列化
 
-Use subagents to prevent single-point bottlenecks. The Karo decomposes tasks into independent subtasks and assigns them to multiple Ashigaru simultaneously. Dependent tasks use `blocks`/`blockedBy` in YAML to ensure correct execution order while maximizing parallel throughput.
+サブエージェントを使用して単一ポイントのボトルネックを防げ。家老はタスクを独立したサブタスクに分解し、複数の足軽に同時に割り当てる。依存タスクはYAMLで `blocks`/`blockedBy` を使用して正しい実行順序を保証しつつ、並列スループットを最大化。
 
-### 3. Research First
+### 3. リサーチファースト
 
-Search for evidence before making decisions. Agents don't rely solely on their training data — they actively research using web search, file exploration, and codebase analysis before proposing solutions. This is especially critical for tasks involving external APIs, libraries, or current best practices.
+決定前にエビデンスを検索せよ。エージェントはトレーニングデータのみに頼らず — 解決策を提案する前にWeb検索、ファイル探索、コードベース分析を使って積極的にリサーチ。これは特に外部API、ライブラリ、現在のベストプラクティスに関わるタスクで重要。
 
-### 4. Continuous Learning
+### 4. 継続的学習
 
-Don't rely solely on model knowledge cutoffs. The system uses Memory MCP to persist lessons learned, discovered patterns, and operational insights across sessions. When an agent encounters a problem it has solved before, it checks memory first. When it learns something new, it records it for future reference.
+モデルの知識カットオフのみに頼るな。システムはMemory MCPを使用して、学んだ教訓、発見したパターン、運用上の洞察をセッション横断で永続化。エージェントが以前解決した問題に遭遇した際、まずメモリをチェック。新しいことを学んだ際、将来の参照のため記録。
 
-### 5. Triangulation
+### 5. トライアンギュレーション
 
-Multi-perspective research with integrated authorization. Important decisions are validated from multiple sources — not just one search result or one file. The system cross-references documentation, existing code patterns, and web resources before committing to an approach.
+統合された権限付き複数視点リサーチ。重要な決定は複数のソースから検証 — 単一の検索結果や単一ファイルのみではない。システムはアプローチにコミットする前に、ドキュメント、既存コードパターン、Webリソースをクロスリファレンス。
 
-## Design Decisions
+## 設計判断
 
-### Why a hierarchy (Shogun → Karo → Ashigaru)?
+### なぜ階層構造（将軍 → 家老 → 足軽）か？
 
-1. **Instant response**: The Shogun delegates immediately, returning control to you
-2. **Parallel execution**: The Karo distributes to multiple Ashigaru simultaneously
-3. **Single responsibility**: Each role is clearly separated — no confusion
-4. **Scalability**: Adding more Ashigaru doesn't break the structure
-5. **Fault isolation**: One Ashigaru failing doesn't affect the others
-6. **Unified reporting**: Only the Shogun communicates with you, keeping information organized
+1. **即座の応答**: 将軍が即座に委任し、あなたに制御を返す
+2. **並列実行**: 家老が複数の足軽に同時に配分
+3. **単一責任**: 各役割が明確に分離 — 混乱なし
+4. **スケーラビリティ**: 足軽を追加しても構造が壊れない
+5. **障害隔離**: 1足軽の失敗が他に影響しない
+6. **統一報告**: 将軍のみがあなたと通信し、情報を整理
 
-### Why Mailbox System?
+### なぜメールボックスシステム？
 
-1. **State persistence**: YAML files provide structured communication that survives agent restarts
-2. **No polling needed**: `inotifywait` is event-driven (kernel-level), reducing API costs to zero during idle
-3. **No interruptions**: Prevents agents from interrupting each other or your input
-4. **Easy debugging**: Humans can read inbox YAML files directly to understand message flow
-5. **No conflicts**: `flock` (exclusive lock) prevents concurrent writes — multiple agents can send simultaneously without race conditions
-6. **Guaranteed delivery**: File write succeeded = message will be delivered. No delivery verification needed, no false negatives
-7. **Nudge-only delivery**: `send-keys` transmits only a short wake-up signal (timeout 5s), not full message content. Agents read from their inbox files themselves
+1. **状態永続性**: YAMLファイルがエージェント再起動を生き延びる構造化通信を提供
+2. **ポーリング不要**: `inotifywait` はイベント駆動（カーネルレベル）、アイドル時のAPIコストをゼロに削減
+3. **割り込みなし**: エージェント同士またはあなたの入力を互いに割り込むことを防ぐ
+4. **デバッグ容易**: 人間がinbox YAMLファイルを直接読んでメッセージフローを理解可能
+5. **競合なし**: `flock`（排他ロック）が同時書き込みを防ぐ — 複数エージェントが競合状態なく同時送信可能
+6. **配信保証**: ファイル書き込み成功 = メッセージ配信される。配信確認不要、偽陰性なし
+7. **Nudgeのみ配信**: `send-keys` は短い起床シグナルのみを送信（タイムアウト5秒）、完全なメッセージ内容ではない。エージェントは自分でinboxファイルから読む
 
-### Why only the Karo updates dashboard.md
+### なぜ家老のみがdashboard.mdを更新するか
 
-1. **Single writer**: Prevents conflicts by limiting updates to one agent
-2. **Information aggregation**: The Karo receives all Ashigaru reports, so it has the full picture
-3. **Consistency**: All updates pass through a single quality gate
-4. **No interruptions**: If the Shogun updated it, it could interrupt the Lord's input
+1. **単一ライター**: 更新を1エージェントに限定して競合を防ぐ
+2. **情報集約**: 家老がすべての足軽報告を受け取るため、全体像を持つ
+3. **一貫性**: すべての更新が単一の品質ゲートを通過
+4. **割り込みなし**: 将軍が更新すると主君の入力を割り込む可能性
 
-### Why Skills are not committed to the repo
+### なぜスキルをリポジトリにコミットしないか
 
-Skills in `.claude/commands/` are excluded from version control by design:
-- Every user's workflow is different
-- Rather than imposing generic skills, each user grows their own skill set
-- Skills emerge organically during operation — you approve candidates as they're discovered
+`.claude/commands/` 内のスキルは設計上バージョン管理から除外:
+- 各ユーザーのワークフローは異なる
+- 汎用スキルを押し付けるより、各ユーザーが独自のスキルセットを育てる
+- スキルは運用中に有機的に出現 — 発見された候補を承認

@@ -1,181 +1,181 @@
-# Task Flow
+# タスクフロー
 
-## Workflow: Shogun → Karo → Ashigaru
+## ワークフロー: 将軍 → 家老 → 足軽
 
 ```
-Lord: command → Shogun: write YAML → inbox_write → Karo: decompose → inbox_write → Ashigaru: execute → report YAML → inbox_write → Karo: update dashboard → Shogun: read dashboard
+主君: command → 将軍: YAML書き込み → inbox_write → 家老: 分解 → inbox_write → 足軽: 実行 → 報告YAML → inbox_write → 家老: dashboard更新 → 将軍: dashboard読む
 ```
 
-## Status Reference (Single Source)
+## ステータス定義（単一の情報源）
 
-Status is defined per YAML file type. **Keep it minimal. Simple is best.**
+ステータスはYAMLファイルタイプごとに定義。**最小限に保つ。シンプルが最善。**
 
-Fixed status set (do not add casually):
-- `queue/shogun_to_karo.yaml`: `pending`, `in_progress`, `done`, `cancelled`
-- `queue/tasks/ashigaruN.yaml`: `assigned`, `blocked`, `done`, `failed`
+固定ステータス集合（安易に追加しない）:
+- `queue/shogun_to_karo.yaml`: `pending`、`in_progress`、`done`、`cancelled`
+- `queue/tasks/ashigaruN.yaml`: `assigned`、`blocked`、`done`、`failed`
 - `queue/tasks/pending.yaml`: `pending_blocked`
-- `queue/ntfy_inbox.yaml`: `pending`, `processed`
+- `queue/ntfy_inbox.yaml`: `pending`、`processed`
 
-Do NOT invent new status values without updating this section.
+このセクションを更新せずに新しいステータス値を発明しないこと。
 
-### Command Queue: `queue/shogun_to_karo.yaml`
+### コマンドキュー: `queue/shogun_to_karo.yaml`
 
-Meanings and allowed/forbidden actions (short):
+意味と許可/禁止行動（短縮版）:
 
-- `pending`: not acknowledged yet
-  - Allowed: Karo reads and immediately ACKs (`pending → in_progress`)
-  - Forbidden: dispatching subtasks while still `pending`
+- `pending`: 未確認
+  - 許可: 家老が読んで即座にACK（`pending → in_progress`）
+  - 禁止: まだ `pending` のままサブタスク配分
 
-- `in_progress`: acknowledged and being worked
-  - Allowed: decompose/dispatch/collect/consolidate
-  - Forbidden: moving goalposts (editing acceptance_criteria), or marking `done` without meeting all criteria
+- `in_progress`: 確認済みで作業中
+  - 許可: 分解/配分/収集/統合
+  - 禁止: ゴールポスト移動（acceptance_criteria編集）、または全基準未達成での `done` マーク
 
-- `done`: complete and validated
-  - Allowed: read-only (history)
-  - Forbidden: editing old cmd to "reopen" (use a new cmd instead)
+- `done`: 完了・検証済み
+  - 許可: 読み取り専用（履歴）
+  - 禁止: 古いcmdを編集して「再開」（代わりに新しいcmdを使用）
 
-- `cancelled`: intentionally stopped
-  - Allowed: read-only (history)
-  - Forbidden: continuing work under this cmd (use a new cmd instead)
+- `cancelled`: 意図的に停止
+  - 許可: 読み取り専用（履歴）
+  - 禁止: このcmd下で作業継続（代わりに新しいcmdを使用）
 
-**Karo rule (ack fast)**:
-- The moment Karo starts processing a cmd (after reading it), update that cmd status:
+**家老ルール（高速ACK）**:
+- 家老がcmd処理開始の瞬間（読み取り後）、そのcmdステータスを更新:
   - `pending` → `in_progress`
-  - This prevents "nobody is working" confusion and stabilizes escalation logic.
+  - これにより「誰も作業していない」混乱を防ぎ、エスカレーションロジックを安定化。
 
-### Ashigaru Task File: `queue/tasks/ashigaruN.yaml`
+### 足軽タスクファイル: `queue/tasks/ashigaruN.yaml`
 
-Meanings and allowed/forbidden actions (short):
+意味と許可/禁止行動（短縮版）:
 
-- `assigned`: start now
-  - Allowed: assignee ashigaru executes and updates to `done/failed` + report + inbox_write
-  - Forbidden: other agents editing that ashigaru YAML
+- `assigned`: 今すぐ開始
+  - 許可: 割当先足軽が実行し `done/failed` に更新 + 報告 + inbox_write
+  - 禁止: 他エージェントがその足軽YAMLを編集
 
-- `blocked`: do NOT start yet (prereqs missing)
-  - Allowed: Karo unblocks by changing to `assigned` when ready, then inbox_write
-  - Forbidden: nudging or starting work while `blocked`
+- `blocked`: まだ開始しない（前提条件不足）
+  - 許可: 家老が準備完了時に `assigned` に変更、次にinbox_write
+  - 禁止: `blocked` のままnudgeまたは作業開始
 
-- `done`: completed
-  - Allowed: read-only; used for consolidation
-  - Forbidden: reusing task_id for redo (use redo protocol)
+- `done`: 完了
+  - 許可: 読み取り専用; 統合に使用
+  - 禁止: redoでtask_id再利用（redo protocol使用）
 
-- `failed`: failed with reason
-  - Allowed: report must include reason + unblock suggestion
-  - Forbidden: silent failure
+- `failed`: 理由付きで失敗
+  - 許可: 報告に理由 + アンブロック提案を含める必須
+  - 禁止: 無言の失敗
 
-Note:
-- Normally, "idle" is a UI state (no active task), not a YAML status value.
-- Exception (placeholder only): `status: idle` is allowed **only** when `task_id: null` (clean start template written by `shutsujin_departure.sh --clean`).
-  - In that state, the file is a placeholder and should be treated as "no task assigned yet".
+注意:
+- 通常、「idle」はUIステート（アクティブタスクなし）であり、YAMLステータス値ではない。
+- 例外（プレースホルダーのみ）: `status: idle` は `task_id: null` の場合のみ許可（`shutsujin_departure.sh --clean` が書くクリーンスタートテンプレート）。
+  - その状態では、ファイルはプレースホルダーで「まだタスク割当なし」として扱うべき。
 
-### Pending Tasks (Karo-managed): `queue/tasks/pending.yaml`
+### 保留タスク（家老管理）: `queue/tasks/pending.yaml`
 
-- `pending_blocked`: holding area; **must not** be assigned yet
-  - Allowed: Karo moves it to an `ashigaruN.yaml` as `assigned` after prerequisites complete
-  - Forbidden: pre-assigning to ashigaru before ready
+- `pending_blocked`: 待機エリア; **まだ割当不可**
+  - 許可: 前提条件完了後、家老が `ashigaruN.yaml` に `assigned` として移動
+  - 禁止: 準備前に足軽へ事前割当
 
-### NTFY Inbox (Lord phone): `queue/ntfy_inbox.yaml`
+### NTFY Inbox（主君のスマホ）: `queue/ntfy_inbox.yaml`
 
-- `pending`: needs processing
-  - Allowed: Shogun processes and sets `processed`
-  - Forbidden: leaving it pending without reason
+- `pending`: 処理が必要
+  - 許可: 将軍が処理して `processed` に設定
+  - 禁止: 理由なく pending のまま放置
 
-- `processed`: processed; keep record
-  - Allowed: read-only
-  - Forbidden: flipping back to pending without creating a new entry
+- `processed`: 処理済み; 記録保持
+  - 許可: 読み取り専用
+  - 禁止: 新しいエントリ作成なしに pending に戻す
 
-## Immediate Delegation Principle (Shogun)
+## 即時委任原則（将軍）
 
-**Delegate to Karo immediately and end your turn** so the Lord can input next command.
+**即座に家老に委任してターン終了** し、主君が次のコマンド入力できるようにせよ。
 
 ```
-Lord: command → Shogun: write YAML → inbox_write → END TURN
+主君: command → 将軍: YAML書き込み → inbox_write → ターン終了
                                         ↓
-                                  Lord: can input next
+                                  主君: 次を入力可能
                                         ↓
-                              Karo/Ashigaru: work in background
+                              家老/足軽: バックグラウンドで作業
                                         ↓
-                              dashboard.md updated as report
+                              dashboard.mdが報告として更新
 ```
 
-## Event-Driven Wait Pattern (Karo)
+## イベント駆動待機パターン（家老）
 
-**After dispatching all subtasks: STOP.** Do not launch background monitors or sleep loops.
+**全サブタスク配分後: 停止。** バックグラウンドモニターやsleepループを起動しない。
 
 ```
-Step 7: Dispatch cmd_N subtasks → inbox_write to ashigaru
-Step 8: check_pending → if pending cmd_N+1, process it → then STOP
-  → Karo becomes idle (prompt waiting)
-Step 9: Ashigaru completes → inbox_write karo → watcher nudges karo
-  → Karo wakes, scans reports, acts
+ステップ7: cmd_N サブタスク配分 → 足軽にinbox_write
+ステップ8: check_pending → 保留cmd_N+1があれば処理 → 次に停止
+  → 家老がアイドル（プロンプト待機）
+ステップ9: 足軽完了 → 家老にinbox_write → watcherが家老をnudge
+  → 家老起床、報告スキャン、行動
 ```
 
-**Why no background monitor**: inbox_watcher.sh detects ashigaru's inbox_write to karo and sends a nudge. This is true event-driven. No sleep, no polling, no CPU waste.
+**バックグラウンドモニター不要の理由**: inbox_watcher.shが足軽のinbox_writeを家老へ検知してnudge送信。これが真のイベント駆動。sleep不要、ポーリング不要、CPU浪費なし。
 
-**Karo wakes via**: inbox nudge from ashigaru report, shogun new cmd, or system event. Nothing else.
+**家老の起床経路**: 足軽報告からのinbox nudge、将軍の新cmd、またはシステムイベント。それ以外なし。
 
-## "Wake = Full Scan" Pattern
+## 「起床 = 全スキャン」パターン
 
-Claude Code cannot "wait". Prompt-wait = stopped.
+Claude Codeは「待機」不可。プロンプト待機 = 停止。
 
-1. Dispatch ashigaru
-2. Say "stopping here" and end processing
-3. Ashigaru wakes you via inbox
-4. Scan ALL report files (not just the reporting one)
-5. Assess situation, then act
+1. 足軽を配分
+2. 「ここで停止」と言って処理終了
+3. 足軽がinbox経由で起床
+4. すべての報告ファイルをスキャン（報告者だけでなく）
+5. 状況評価、次に行動
 
-## Report Scanning (Communication Loss Safety)
+## 報告スキャン（通信ロス安全網）
 
-On every wakeup (regardless of reason), scan ALL `queue/reports/ashigaru*_report.yaml`.
-Cross-reference with dashboard.md — process any reports not yet reflected.
+起床時（理由問わず）、すべての `queue/reports/ashigaru*_report.yaml` をスキャン。
+dashboard.mdとクロス参照 — まだ反映されていない報告を処理。
 
-**Why**: Ashigaru inbox messages may be delayed. Report files are already written and scannable as a safety net.
+**理由**: 足軽inboxメッセージが遅延する可能性。報告ファイルは既に書き込まれ、安全網としてスキャン可能。
 
-## Foreground Block Prevention (24-min Freeze Lesson)
+## フォアグラウンドブロック防止（24分フリーズの教訓）
 
-**Karo blocking = entire army halts.** On 2026-02-06, foreground `sleep` during delivery checks froze karo for 24 minutes.
+**家老ブロック = 全軍停止。** 2026-02-06、配信確認中のフォアグラウンド `sleep` が家老を24分フリーズ。
 
-**Rule: NEVER use `sleep` in foreground.** After dispatching tasks → stop and wait for inbox wakeup.
+**ルール: フォアグラウンドで `sleep` 使用禁止。** タスク配分後 → 停止してinbox起床を待つ。
 
-| Command Type | Execution Method | Reason |
+| コマンドタイプ | 実行方法 | 理由 |
 |-------------|-----------------|--------|
-| Read / Write / Edit | Foreground | Completes instantly |
-| inbox_write.sh | Foreground | Completes instantly |
-| `sleep N` | **FORBIDDEN** | Use inbox event-driven instead |
-| tmux capture-pane | **FORBIDDEN** | Read report YAML instead |
+| Read / Write / Edit | フォアグラウンド | 即座完了 |
+| inbox_write.sh | フォアグラウンド | 即座完了 |
+| `sleep N` | **禁止** | inboxイベント駆動を使用 |
+| tmux capture-pane | **禁止** | 報告YAML読み取りを使用 |
 
-### Dispatch-then-Stop Pattern
+### 配分後停止パターン
 
 ```
-✅ Correct (event-driven):
-  cmd_008 dispatch → inbox_write ashigaru → stop (await inbox wakeup)
-  → ashigaru completes → inbox_write karo → karo wakes → process report
+✅ 正しい（イベント駆動）:
+  cmd_008配分 → inbox_write ashigaru → 停止（inbox起床待ち）
+  → 足軽完了 → inbox_write karo → 家老起床 → 報告処理
 
-❌ Wrong (polling):
-  cmd_008 dispatch → sleep 30 → capture-pane → check status → sleep 30 ...
+❌ 誤り（ポーリング）:
+  cmd_008配分 → sleep 30 → capture-pane → status確認 → sleep 30 ...
 ```
 
-## Timestamps
+## タイムスタンプ
 
-**Always use `date` command.** Never guess.
+**常に `date` コマンド使用。** 推測禁止。
 ```bash
-date "+%Y-%m-%d %H:%M"       # For dashboard.md
-date "+%Y-%m-%dT%H:%M:%S"    # For YAML (ISO 8601)
+date "+%Y-%m-%d %H:%M"       # dashboard.md用
+date "+%Y-%m-%dT%H:%M:%S"    # YAML用（ISO 8601）
 ```
 
-## Pre-Commit Gate (CI-Aligned)
+## プレコミットゲート（CI整合）
 
-Rule:
-- Run the same checks as GitHub Actions *before* committing.
-- Only commit when checks are OK.
-- Ask the Lord before any `git push`.
+ルール:
+- コミット前にGitHub Actionsと同じチェック実行。
+- チェックOK時のみコミット。
+- `git push` 前に主君に質問。
 
-Minimum local checks:
+最小限のローカルチェック:
 ```bash
-# Unit tests (same as CI)
+# ユニットテスト（CIと同じ）
 bats tests/*.bats tests/unit/*.bats
 
-# Instruction generation must be in sync (same as CI "Build Instructions Check")
+# 指示生成が同期されている必須（CI "Build Instructions Check"と同じ）
 bash scripts/build_instructions.sh
 git diff --exit-code instructions/generated/
 ```

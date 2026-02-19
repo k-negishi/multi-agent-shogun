@@ -1,69 +1,69 @@
-# INTEG-001: Integration Task Contradiction Detection
+# INTEG-001: 統合タスク矛盾検出
 
-> **Applies to**: All integration tasks where 2+ input reports are merged into one output.
-> **Origin**: cmd_011 post-mortem (fact contradiction was missed during integration).
+> **適用対象**: 2つ以上の入力報告を1つの出力にマージするすべての統合タスク。
+> **起源**: cmd_011事後分析（統合中に事実矛盾が見逃された）。
 
-## Core Principle
+## コア原則
 
-When integrating multiple input reports, the integrating agent **MUST** detect and resolve contradictions between inputs **before** merging content. Contradictions left unresolved propagate as errors into the final deliverable.
+複数の入力報告を統合する際、統合エージェントは内容をマージする**前に**、入力間の矛盾を検出し解決**しなければならない**。未解決の矛盾はエラーとして最終成果物に伝播する。
 
-## Mandatory Pre-Integration Steps
+## 必須の統合前ステップ
 
-### Step 1: Fact Reconciliation
+### ステップ1: 事実の照合
 
-Extract all factual claims from each input report and cross-reference:
+各入力報告からすべての事実主張を抽出しクロスリファレンス:
 
-| Input A Claim | Input B Claim | Match? | Resolution |
+| 入力A主張 | 入力B主張 | 一致？ | 解決 |
 |---------------|---------------|--------|------------|
-| "Client has 8h of video content" | "Client should start creating videos" | CONFLICT | Check primary source |
+| 「クライアントは8時間の動画コンテンツを持つ」 | 「クライアントは動画作成を開始すべき」 | 矛盾 | プライマリソースを確認 |
 
-**High-risk contradiction types:**
-- "Already doing X" vs "Should start X" (existence vs non-existence)
-- Numeric/timeline inconsistencies
-- Contradictory descriptions of the same entity/person/system
-- Conflicting technical assumptions or prerequisites
+**高リスク矛盾タイプ:**
+- 「既にXを行っている」 vs 「Xを開始すべき」（存在 vs 非存在）
+- 数値/タイムラインの不一致
+- 同じエンティティ/人/システムの矛盾した説明
+- 矛盾する技術的前提または前提条件
 
-### Step 2: Resolve Contradictions
+### ステップ2: 矛盾を解決
 
-When a contradiction is found:
+矛盾が見つかった場合:
 
-1. **Consult primary sources** — transcripts, raw data, meeting notes referenced in task YAML
-2. **Adopt the factually correct version** and modify proposals based on incorrect assumptions
-3. **Document the resolution** in a "Contradiction Resolution" section of the output
+1. **プライマリソースを参照** — タスクYAMLで参照されたトランスクリプト、生データ、ミーティングノート
+2. **事実的に正しいバージョンを採用**し、誤った前提に基づく提案を修正
+3. **解決を文書化** 出力の「矛盾解決」セクションに
 
-### Step 3: Escalate Only If Unresolvable
+### ステップ3: 解決不可能な場合のみエスカレート
 
-If primary sources cannot resolve the contradiction → report to karo with details.
-Karo escalates to shogun → lord if needed.
+プライマリソースが矛盾を解決できない場合 → 詳細を添えてkaroに報告。
+必要に応じてKaroが将軍 → 主君にエスカレート。
 
-## Karo's Responsibility
+## 家老の責任
 
-When assigning integration tasks, the task YAML **MUST** include:
+統合タスクを割り当てる際、タスクYAMLに**必ず**以下を含める:
 
 ```yaml
 description: |
-  ■ INTEG-001 (Mandatory)
-  Detect and resolve contradictions between input reports before integration.
-  Pay special attention to "already doing" vs "should start" assumption mismatches.
+  ■ INTEG-001（必須）
+  統合前に入力報告間の矛盾を検出し解決せよ。
+  「既に行っている」 vs 「開始すべき」の前提ミスマッチに特に注意。
 
-  ■ Primary Sources (for fact-checking)
+  ■ プライマリソース（事実確認用）
   - /path/to/transcript.md
   - /path/to/original_data.yaml
 
-  ■ Input Reports
+  ■ 入力報告
   - /path/to/report1.md
   - /path/to/report2.md
 ```
 
-## Integration Type Selection
+## 統合タイプの選択
 
-Choose the appropriate template based on integration type:
+統合タイプに基づいて適切なテンプレートを選択:
 
-| Integration Type | Template | Contradiction Check Depth |
+| 統合タイプ | テンプレート | 矛盾チェック深度 |
 |-----------------|----------|--------------------------|
-| Fact integration | `templates/integ_fact.md` | Highest — line-by-line fact matching |
-| Proposal integration | `templates/integ_proposal.md` | High — assumption alignment |
-| Code integration | `templates/integ_code.md` | Medium — CI/test-driven |
-| Analysis integration | `templates/integ_analysis.md` | High — framework alignment |
+| 事実統合 | `templates/integ_fact.md` | 最高 — 行ごとの事実マッチング |
+| 提案統合 | `templates/integ_proposal.md` | 高 — 前提の整合 |
+| コード統合 | `templates/integ_code.md` | 中 — CI/テスト駆動 |
+| 分析統合 | `templates/integ_analysis.md` | 高 — フレームワークの整合 |
 
-Karo determines the type and includes the appropriate template reference in the task YAML.
+家老がタイプを決定し、適切なテンプレート参照をタスクYAMLに含める。

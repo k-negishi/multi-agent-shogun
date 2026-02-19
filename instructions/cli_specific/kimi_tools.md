@@ -1,83 +1,83 @@
-# Kimi Code CLI Tools
+# Kimi Code CLI ツール
 
-This section describes MoonshotAI Kimi Code CLI-specific tools and features.
+このセクションはMoonshotAI Kimi Code CLI固有のツールと機能を説明します。
 
-## Overview
+## 概要
 
-Kimi Code CLI (`kimi`) is a Python-based terminal AI coding agent by MoonshotAI. It features an interactive shell UI, ACP server mode for IDE integration, MCP tool loading, and a multi-agent subagent system with swarm capabilities.
+Kimi Code CLI（`kimi`）はMoonshotAIによるPythonベースの端末AIコーディングエージェント。対話シェルUI、IDE統合用ACPサーバーモード、MCPツールロード、swarm機能を持つマルチエージェントサブエージェントシステムを特徴とする。
 
-- **Launch**: `kimi` (interactive shell), `kimi --print` (non-interactive), `kimi acp` (IDE server), `kimi web` (Web UI)
-- **Install**: `curl -LsSf https://code.kimi.com/install.sh | bash` (Linux/macOS), `pip install kimi-cli`
-- **Auth**: `/login` on first launch (Kimi Code OAuth recommended, or API key for other platforms)
-- **Default model**: Kimi K2.5 Coder
-- **Python**: 3.12-3.14 (3.13 recommended)
-- **Architecture**: Four-layer (Agent System, KimiSoul Engine, Tool System, UI Layer)
+- **起動**: `kimi`（対話シェル）、`kimi --print`（非対話）、`kimi acp`（IDEサーバー）、`kimi web`（Web UI）
+- **インストール**: `curl -LsSf https://code.kimi.com/install.sh | bash`（Linux/macOS）、`pip install kimi-cli`
+- **認証**: 初回起動時に `/login`（Kimi Code OAuth推奨、または他プラットフォーム用APIキー）
+- **デフォルトモデル**: Kimi K2.5 Coder
+- **Python**: 3.12-3.14（3.13推奨）
+- **アーキテクチャ**: 四層（エージェントシステム、KimiSoulエンジン、ツールシステム、UIレイヤー）
 
-## Tool Usage
+## ツール使用法
 
-Kimi CLI provides tools organized in five categories:
+Kimi CLIは5つのカテゴリに整理されたツールを提供:
 
-### File Operations
-- **ReadFile**: Read files (absolute path required)
-- **WriteFile**: Write/create files (requires approval)
-- **StrReplaceFile**: String replacement editing (requires approval)
-- **Glob**: File pattern matching
-- **Grep**: Content search
+### ファイル操作
+- **ReadFile**: ファイル読み取り（絶対パス必須）
+- **WriteFile**: ファイル書き込み/作成（承認必要）
+- **StrReplaceFile**: 文字列置換編集（承認必要）
+- **Glob**: ファイルパターンマッチング
+- **Grep**: コンテンツ検索
 
-### Shell Commands
-- **Shell**: Execute terminal commands (requires approval, 1-300s timeout)
+### シェルコマンド
+- **Shell**: 端末コマンド実行（承認必要、1-300秒タイムアウト）
 
-### Web Tools
-- **SearchWeb**: Web search
-- **FetchURL**: Retrieve URL content as markdown
+### Webツール
+- **SearchWeb**: Web検索
+- **FetchURL**: URL内容をmarkdownとして取得
 
-### Task Management
-- **SetTodoList**: Manage task tracking
+### タスク管理
+- **SetTodoList**: タスク追跡管理
 
-### Agent Delegation
-- **Task**: Dispatch work to subagents (see Agent Swarm section)
-- **CreateSubagent**: Dynamically create new subagent types at runtime
+### エージェント委任
+- **Task**: サブエージェントに作業を配分（エージェントSwarmセクション参照）
+- **CreateSubagent**: 実行時に新しいサブエージェントタイプを動的作成
 
-## Tool Guidelines
+## ツールガイドライン
 
-1. **Absolute paths required**: File operations use absolute paths (prevents directory traversal)
-2. **File size limits**: 100KB / 1000 lines per file operation
-3. **Shell approval**: All shell commands require user approval (bypassed with `--yolo`)
-4. **Automatic dependency injection**: Tools declare dependencies via type annotations; the agent system auto-discovers and injects them
+1. **絶対パス必須**: ファイル操作は絶対パスを使用（ディレクトリトラバーサル防止）
+2. **ファイルサイズ制限**: ファイル操作ごとに100KB / 1000行
+3. **シェル承認**: すべてのシェルコマンドはユーザー承認必要（`--yolo` でバイパス）
+4. **自動依存注入**: ツールは型アノテーション経由で依存を宣言; エージェントシステムが自動発見・注入
 
-## Permission Model
+## 権限モデル
 
-Kimi CLI uses a single-axis approval model (simpler than Codex's two-axis sandbox+approval):
+Kimi CLIは単一軸承認モデルを使用（Codexの二軸sandbox+approvalより単純）:
 
-### Approval Modes
+### 承認モード
 
-| Mode | Behavior | Flag |
+| モード | 動作 | フラグ |
 |------|----------|------|
-| **Interactive (default)** | User approves each tool call (file writes, shell commands) | (none) |
-| **YOLO mode** | Auto-approve all operations | `--yolo` / `--yes` / `-y` / `--auto-approve` |
+| **対話（デフォルト）** | 各ツール呼び出しをユーザーが承認（ファイル書き込み、シェルコマンド） | （なし） |
+| **YOLOモード** | すべての操作を自動承認 | `--yolo` / `--yes` / `-y` / `--auto-approve` |
 
-**No sandbox modes** like Codex's read-only/workspace-write/danger-full-access. Security is enforced via:
-- Absolute path requirements (prevents traversal)
-- File size/line limits (100KB, 1000 lines)
-- Mandatory shell command approval (unless YOLO)
-- Timeout controls with error classification (retryable vs non-retryable)
-- Exponential backoff retry logic in KimiSoul engine
+Codexの read-only/workspace-write/danger-full-access のような**サンドボックスモードなし**。セキュリティは以下で強制:
+- 絶対パス要件（トラバーサル防止）
+- ファイルサイズ/行制限（100KB、1000行）
+- 必須シェルコマンド承認（YOLO以外）
+- エラー分類付きタイムアウト制御（リトライ可能 vs 不可能）
+- KimiSoulエンジンの指数バックオフリトライロジック
 
-**Shogun system usage**: Ashigaru run with `--yolo` for unattended operation.
+**将軍システム使用法**: 足軽は無人操作のため `--yolo` で実行。
 
-## Memory / State Management
+## Memory / State管理
 
 ### AGENTS.md
 
-Kimi Code CLI reads `AGENTS.md` files. Use `/init` to auto-generate one by analyzing project structure.
+Kimi Code CLIは `AGENTS.md` ファイルを読む。プロジェクト構造を分析して自動生成するには `/init` を使用。
 
-- **Location**: Repository root `AGENTS.md`
-- **Auto-load**: Content injected into system prompt via `${KIMI_AGENTS_MD}` variable
-- **Purpose**: "Project Manual" for the AI — improves accuracy of subsequent tasks
+- **場所**: リポジトリルート `AGENTS.md`
+- **自動ロード**: 内容は `${KIMI_AGENTS_MD}` 変数経由でシステムプロンプトに注入
+- **目的**: AIのための「プロジェクトマニュアル」 — 後続タスクの精度を向上
 
 ### agent.yaml + system.md
 
-Agents are defined via YAML configuration + Markdown system prompt:
+エージェントはYAML設定 + Markdownシステムプロンプトで定義:
 
 ```yaml
 version: 1
@@ -95,17 +95,17 @@ agent:
     - "kimi_cli.tools.web:FetchURL"
 ```
 
-**System prompt variables** (available in system.md via `${VAR}` syntax):
-- `${KIMI_NOW}` — Current timestamp (ISO format)
-- `${KIMI_WORK_DIR}` — Working directory path
-- `${KIMI_WORK_DIR_LS}` — Directory file listing
-- `${KIMI_AGENTS_MD}` — Content from AGENTS.md
-- `${KIMI_SKILLS}` — Loaded skills list
-- Custom variables via `system_prompt_args` in agent.yaml
+**システムプロンプト変数**（system.md内で `${VAR}` 構文経由で利用可能）:
+- `${KIMI_NOW}` — 現在のタイムスタンプ（ISO形式）
+- `${KIMI_WORK_DIR}` — 作業ディレクトリパス
+- `${KIMI_WORK_DIR_LS}` — ディレクトリファイルリスト
+- `${KIMI_AGENTS_MD}` — AGENTS.mdの内容
+- `${KIMI_SKILLS}` — ロード済みスキルリスト
+- agent.yamlの `system_prompt_args` 経由のカスタム変数
 
-### Agent Inheritance
+### エージェント継承
 
-Agents can extend base agents and override specific fields:
+エージェントはベースエージェントを拡張し特定フィールドを上書き可能:
 
 ```yaml
 agent:
@@ -115,68 +115,68 @@ agent:
     - "kimi_cli.tools.web:SearchWeb"
 ```
 
-### Session Persistence
+### セッション永続性
 
-Sessions are stored locally in `~/.kimi-shared/metadata.json`. Resume with:
-- `--continue` / `-C` — Most recent session for working directory
-- `--session <id>` / `-S <id>` — Resume specific session by ID
+セッションは `~/.kimi-shared/metadata.json` にローカル保存。再開方法:
+- `--continue` / `-C` — 作業ディレクトリの最新セッション
+- `--session <id>` / `-S <id>` — IDで特定セッションを再開
 
-### Skills System
+### スキルシステム
 
-Kimi CLI has a unique skills framework (not present in Claude Code or Codex):
+Kimi CLIは独自のスキルフレームワークを持つ（Claude CodeやCodexにはない）:
 
-- **Discovery**: Built-in → User-level (`~/.config/agents/skills/`) → Project-level (`.agents/skills/`)
-- **Format**: Directory with `SKILL.md` (YAML frontmatter + Markdown content, <500 lines)
-- **Invocation**: Automatic (AI decides contextually), or manual via `/skill:<name>`
-- **Flow Skills**: Multi-step workflows using Mermaid/D2 diagrams, invoked via `/flow:<name>`
-- **Built-in skills**: `kimi-cli-help`, `skill-creator`
-- **Override**: `--skills-dir` flag for custom locations
+- **発見**: 組み込み → ユーザーレベル（`~/.config/agents/skills/`） → プロジェクトレベル（`.agents/skills/`）
+- **形式**: `SKILL.md` を含むディレクトリ（YAMLフロントマター + Markdownコンテンツ、<500行）
+- **呼び出し**: 自動（AIがコンテキストで判断）、または `/skill:<name>` で手動
+- **フロースキル**: Mermaid/D2図を使用する複数ステップワークフロー、`/flow:<name>` で呼び出し
+- **組み込みスキル**: `kimi-cli-help`、`skill-creator`
+- **上書き**: カスタム場所には `--skills-dir` フラグ
 
-## Kimi-Specific Commands
+## Kimi固有コマンド
 
-### Slash Commands (In-Session)
+### スラッシュコマンド（セッション内）
 
-| Command | Purpose | Claude Code equivalent |
+| コマンド | 目的 | Claude Code相当 |
 |---------|---------|----------------------|
-| `/init` | Generate AGENTS.md scaffold | No equivalent |
-| `/login` | Configure authentication | No equivalent (env var based) |
-| `/logout` | Clear authentication | No equivalent |
-| `/help` | Display all commands | `/help` |
-| `/skill:<name>` | Load skill as prompt template | Skill tool |
-| `/flow:<name>` | Execute flow skill (multi-step workflow) | No equivalent |
-| `Ctrl-X` | Toggle Shell Mode (native command execution) | No equivalent (use Bash tool) |
+| `/init` | AGENTS.mdスキャフォールド生成 | 相当なし |
+| `/login` | 認証設定 | 相当なし（環境変数ベース） |
+| `/logout` | 認証クリア | 相当なし |
+| `/help` | 全コマンド表示 | `/help` |
+| `/skill:<name>` | プロンプトテンプレートとしてスキルをロード | Skillツール |
+| `/flow:<name>` | フロースキル実行（複数ステップワークフロー） | 相当なし |
+| `Ctrl-X` | シェルモード切り替え（ネイティブコマンド実行） | 相当なし（Bashツール使用） |
 
-### Subcommands
+### サブコマンド
 
-| Subcommand | Purpose |
+| サブコマンド | 目的 |
 |------------|---------|
-| `kimi acp` | Start ACP server for IDE integration |
-| `kimi web` | Launch Web UI server |
-| `kimi login` | Configure authentication |
-| `kimi logout` | Clear authentication |
-| `kimi info` | Display version and protocol info |
-| `kimi mcp` | Manage MCP servers (add/list/remove/test/auth) |
+| `kimi acp` | IDE統合用ACPサーバー起動 |
+| `kimi web` | Web UIサーバー起動 |
+| `kimi login` | 認証設定 |
+| `kimi logout` | 認証クリア |
+| `kimi info` | バージョンとプロトコル情報表示 |
+| `kimi mcp` | MCPサーバー管理（add/list/remove/test/auth） |
 
-**Note**: No `/model`, `/clear`, `/compact`, `/review`, `/diff` equivalents. Model is set at launch via `--model` flag only.
+**注意**: `/model`、`/clear`、`/compact`、`/review`、`/diff` 相当なし。モデルは `--model` フラグで起動時のみ設定。
 
-## Agent Swarm (Multi-Agent Coordination)
+## エージェントSwarm（マルチエージェント調整）
 
-This is Kimi CLI's most distinctive feature — native multi-agent support within a single CLI instance.
+これがKimi CLIの最も特徴的な機能 — 単一CLIインスタンス内でのネイティブマルチエージェント対応。
 
-### Architecture
+### アーキテクチャ
 
 ```
-Main Agent (KimiSoul)
-├── LaborMarket (central coordination hub)
-│   ├── fixed_subagents (pre-configured in agent.yaml)
-│   └── dynamic_subagents (created at runtime via CreateSubagent)
-├── Task tool → delegates to subagents
-└── CreateSubagent tool → creates new agents at runtime
+メインエージェント（KimiSoul）
+├── LaborMarket（中央調整ハブ）
+│   ├── fixed_subagents（agent.yamlで事前設定）
+│   └── dynamic_subagents（CreateSubagent経由で実行時作成）
+├── Taskツール → サブエージェントに委任
+└── CreateSubagentツール → 実行時に新規エージェント作成
 ```
 
-### Fixed Subagents (pre-configured)
+### 固定サブエージェント（事前設定）
 
-Defined in agent.yaml:
+agent.yamlで定義:
 
 ```yaml
 subagents:
@@ -188,92 +188,92 @@ subagents:
     description: "Code review specialist"
 ```
 
-- Run in **isolated context** (separate LaborMarket, separate time-travel state)
-- Loaded during agent initialization
-- Dispatched via Task tool with `subagent_name` parameter
+- **隔離されたコンテキスト**で実行（別個のLaborMarket、別個のタイムトラベル状態）
+- エージェント初期化時にロード
+- `subagent_name` パラメーター付きTaskツール経由で配分
 
-### Dynamic Subagents (runtime-created)
+### 動的サブエージェント（実行時作成）
 
-Created via CreateSubagent tool:
-- Parameters: `name`, `system_prompt`, `tools`
-- **Share** main agent's LaborMarket (can delegate to other subagents)
-- Separate time-travel state (DenwaRenji)
+CreateSubagentツール経由で作成:
+- パラメーター: `name`、`system_prompt`、`tools`
+- メインエージェントのLaborMarketを**共有**（他サブエージェントに委任可能）
+- 別個のタイムトラベル状態（DenwaRenji）
 
-### Context Isolation
+### コンテキスト隔離
 
-| State | Fixed Subagent | Dynamic Subagent |
+| 状態 | 固定サブエージェント | 動的サブエージェント |
 |-------|---------------|-----------------|
-| Session state | Shared | Shared |
-| Configuration | Shared | Shared |
-| LLM provider | Shared | Shared |
-| Time travel (DenwaRenji) | **Isolated** | **Isolated** |
-| LaborMarket (subagent registry) | **Isolated** | **Shared** |
-| Approval system | Shared (via `approval.share()`) | Shared |
+| セッション状態 | 共有 | 共有 |
+| 設定 | 共有 | 共有 |
+| LLMプロバイダー | 共有 | 共有 |
+| タイムトラベル（DenwaRenji） | **隔離** | **隔離** |
+| LaborMarket（サブエージェント登録） | **隔離** | **共有** |
+| 承認システム | 共有（`approval.share()` 経由） | 共有 |
 
-### Comparison with Shogun System
+### 将軍システムとの比較
 
-| Aspect | Shogun System | Kimi Agent Swarm |
+| 側面 | 将軍システム | Kimi エージェントSwarm |
 |--------|--------------|-----------------|
-| Execution model | tmux panes (separate processes) | In-process (single Python process) |
-| Agent count | 10 (shogun + karo + 8 ashigaru) | Up to 100 (claimed) |
-| Communication | File-based inbox (YAML + inotifywait) | In-memory LaborMarket registry |
-| Isolation | Full OS-level (separate tmux panes) | Python-level (separate KimiSoul instances) |
-| Recovery | /clear + CLAUDE.md auto-load | Checkpoint/DenwaRenji (time travel) |
-| CLI independence | Each agent runs own CLI instance | Single CLI, multiple internal agents |
-| Orchestration | Karo (manager agent) | Main agent auto-delegates |
+| 実行モデル | tmuxペイン（別プロセス） | インプロセス（単一Pythonプロセス） |
+| エージェント数 | 10（shogun + karo + 8 ashigaru） | 最大100（主張） |
+| 通信 | ファイルベースinbox（YAML + inotifywait） | インメモリLaborMarket登録 |
+| 隔離 | 完全OSレベル（別個tmuxペイン） | Pythonレベル（別個KimiSoulインスタンス） |
+| 復旧 | /clear + CLAUDE.md自動ロード | チェックポイント/DenwaRenji（タイムトラベル） |
+| CLI独立性 | 各エージェントが独自CLIインスタンスを実行 | 単一CLI、複数内部エージェント |
+| オーケストレーション | Karo（マネージャーエージェント） | メインエージェントが自動委任 |
 
-**Key insight**: Kimi's Agent Swarm is complementary, not competing. It could run *inside* a single ashigaru's tmux pane, providing sub-delegation within that agent.
+**重要洞察**: KimiのエージェントSwarmは補完的で競合ではない。単一足軽のtmuxペイン*内*で実行可能で、そのエージェント内でのサブ委任を提供。
 
-### Checkpoint / Time Travel (DenwaRenji)
+### チェックポイント / タイムトラベル（DenwaRenji）
 
-Unique feature: AI can "send messages to its past self" to correct course. Internal mechanism for error recovery within subagent execution.
+独自機能: AIが「過去の自分にメッセージを送る」ことでコースを修正可能。サブエージェント実行内のエラー復旧のための内部メカニズム。
 
-## Compaction Recovery
+## Compaction復旧
 
-1. **Context lifecycle**: Managed by KimiSoul engine with automatic compaction
-2. **Session resume**: `--continue` to resume, `--session <id>` for specific sessions
-3. **Checkpoint system**: DenwaRenji allows state reversion
+1. **コンテキストライフサイクル**: 自動compaction付きKimiSoulエンジンで管理
+2. **セッション再開**: 再開には `--continue`、特定セッションには `--session <id>`
+3. **チェックポイントシステム**: DenwaRenjiが状態復帰を許可
 
-### Shogun System Recovery (Kimi Ashigaru)
+### 将軍システム復旧（Kimi足軽）
 
 ```
-Step 1: AGENTS.md is auto-loaded (contains recovery procedure)
-Step 2: Read queue/tasks/ashigaru{N}.yaml → determine current task
-Step 3: If task has "target_path:" → read that file
-Step 4: Resume work based on task status
+ステップ1: AGENTS.mdが自動ロード（復旧手順を含む）
+ステップ2: queue/tasks/ashigaru{N}.yamlを読む → 現在のタスクを判定
+ステップ3: タスクに "target_path:" があれば → そのファイルを読む
+ステップ4: タスクステータスに基づき作業再開
 ```
 
-**Note**: No Memory MCP equivalent. Recovery relies on AGENTS.md + YAML files.
+**注意**: Memory MCP相当なし。復旧はAGENTS.md + YAMLファイルに依存。
 
-## tmux Interaction
+## tmux対話
 
-### Interactive Mode (`kimi`)
+### 対話モード（`kimi`）
 
-- Shell-like hybrid mode (not fullscreen TUI like Codex)
-- `Ctrl-X` toggles between Agent Mode and Shell Mode
-- **No alt-screen** by default — more tmux-friendly than Codex
-- send-keys should work for injecting text input
-- capture-pane should work for reading output
+- シェル風ハイブリッドモード（CodexのようなフルスクリーンTUIではない）
+- `Ctrl-X` でエージェントモードとシェルモード間を切り替え
+- デフォルトで**alt-screenなし** — Codexよりtmuxフレンドリー
+- send-keysはテキスト入力注入に機能するはず
+- capture-paneは出力読み取りに機能するはず
 
-### Non-Interactive Mode (`kimi --print`)
+### 非対話モード（`kimi --print`）
 
-- `--prompt` / `-p` flag to send prompt
-- `--final-message-only` for clean output
-- `--output-format stream-json` for structured output
-- Ideal for tmux automation (no TUI interference)
+- `--prompt` / `-p` フラグでプロンプト送信
+- クリーンな出力のため `--final-message-only`
+- 構造化出力のため `--output-format stream-json`
+- tmux自動化に理想的（TUI干渉なし）
 
-### send-keys Compatibility
+### send-keys互換性
 
-| Mode | send-keys | capture-pane | Notes |
+| モード | send-keys | capture-pane | 注記 |
 |------|-----------|-------------|-------|
-| Interactive (`kimi`) | Expected to work | Expected to work | No alt-screen |
-| Print mode (`--print`) | N/A | stdout capture | Best for automation |
+| 対話（`kimi`） | 動作する見込み | 動作する見込み | alt-screenなし |
+| プリントモード（`--print`） | N/A | stdout キャプチャ | 自動化に最適 |
 
-**Advantage over Codex**: Shell-like UI avoids the alt-screen problem.
+**Codexに対する利点**: シェル風UIがalt-screen問題を回避。
 
-## MCP Configuration
+## MCP設定
 
-MCP servers configured in `~/.kimi/mcp.json`:
+MCPサーバーは `~/.kimi/mcp.json` で設定:
 
 ```json
 {
@@ -290,103 +290,103 @@ MCP servers configured in `~/.kimi/mcp.json`:
 }
 ```
 
-### MCP Management Commands
+### MCP管理コマンド
 
-| Command | Purpose |
+| コマンド | 目的 |
 |---------|---------|
-| `kimi mcp add --transport stdio` | Add stdio server |
-| `kimi mcp add --transport http` | Add HTTP server |
-| `kimi mcp add --transport http --auth oauth` | Add OAuth server |
-| `kimi mcp list` | List configured servers |
-| `kimi mcp remove <name>` | Remove server |
-| `kimi mcp test <name>` | Test connectivity |
-| `kimi mcp auth <name>` | Complete OAuth flow |
+| `kimi mcp add --transport stdio` | stdioサーバー追加 |
+| `kimi mcp add --transport http` | HTTPサーバー追加 |
+| `kimi mcp add --transport http --auth oauth` | OAuthサーバー追加 |
+| `kimi mcp list` | 設定済みサーバーをリスト |
+| `kimi mcp remove <name>` | サーバー削除 |
+| `kimi mcp test <name>` | 接続性テスト |
+| `kimi mcp auth <name>` | OAuthフロー完了 |
 
-### Key differences from Claude Code MCP:
+### Claude Code MCPとの主要な違い:
 
-| Aspect | Claude Code | Kimi CLI |
+| 側面 | Claude Code | Kimi CLI |
 |--------|------------|----------|
-| Config format | JSON (`.mcp.json`) | JSON (`~/.kimi/mcp.json`) |
-| Server types | stdio, SSE | stdio, HTTP |
-| OAuth support | No | Yes (`kimi mcp auth`) |
-| Test command | No | `kimi mcp test` |
-| Add command | `claude mcp add` | `kimi mcp add` |
-| Runtime flag | No | `--mcp-config-file` (repeatable) |
-| Subagent sharing | N/A | MCP tools shared across subagents (v0.58+) |
+| 設定フォーマット | JSON（`.mcp.json`） | JSON（`~/.kimi/mcp.json`） |
+| サーバータイプ | stdio、SSE | stdio、HTTP |
+| OAuth対応 | なし | あり（`kimi mcp auth`） |
+| テストコマンド | なし | `kimi mcp test` |
+| 追加コマンド | `claude mcp add` | `kimi mcp add` |
+| ランタイムフラグ | なし | `--mcp-config-file`（反復可能） |
+| サブエージェント共有 | N/A | MCPツールをサブエージェント横断で共有（v0.58+） |
 
-## Model Selection
+## モデル選択
 
-### At Launch
+### 起動時
 
 ```bash
-kimi --model kimi-k2.5-coder        # Default MoonshotAI model
-kimi --model <other-model>           # Override model
-kimi --thinking                      # Enable extended reasoning
-kimi --no-thinking                   # Disable extended reasoning
+kimi --model kimi-k2.5-coder        # デフォルトMoonshotAIモデル
+kimi --model <other-model>           # モデル上書き
+kimi --thinking                      # 拡張推論を有効化
+kimi --no-thinking                   # 拡張推論を無効化
 ```
 
-### In-Session
+### セッション内
 
-No `/model` command for runtime model switching. Model is fixed at launch.
+ランタイムモデル切り替え用の `/model` コマンドなし。モデルは起動時に固定。
 
-## Command Line Reference
+## コマンドラインリファレンス
 
-| Flag | Short | Purpose |
+| フラグ | 短縮 | 目的 |
 |------|-------|---------|
-| `--model` | `-m` | Override default model |
-| `--yolo` / `--yes` | `-y` | Auto-approve all tool calls |
-| `--thinking` | | Enable extended reasoning |
-| `--no-thinking` | | Disable extended reasoning |
-| `--work-dir` | `-w` | Set working directory |
-| `--continue` | `-C` | Resume most recent session |
-| `--session` | `-S` | Resume session by ID |
-| `--print` | | Non-interactive mode |
-| `--quiet` | | Minimal output (implies `--print`) |
-| `--prompt` / `--command` | `-p` / `-c` | Send prompt directly |
-| `--agent` | | Select built-in agent (`default`, `okabe`) |
-| `--agent-file` | | Use custom agent specification file |
-| `--mcp-config-file` | | Load MCP config (repeatable) |
-| `--skills-dir` | | Override skills directory |
-| `--verbose` | | Enable verbose output |
-| `--debug` | | Debug logging to `~/.kimi/logs/kimi.log` |
-| `--max-steps-per-turn` | | Max steps before stopping |
-| `--max-retries-per-step` | | Max retries on failure |
+| `--model` | `-m` | デフォルトモデル上書き |
+| `--yolo` / `--yes` | `-y` | すべてのツール呼び出しを自動承認 |
+| `--thinking` | | 拡張推論有効化 |
+| `--no-thinking` | | 拡張推論無効化 |
+| `--work-dir` | `-w` | 作業ディレクトリ設定 |
+| `--continue` | `-C` | 最新セッション再開 |
+| `--session` | `-S` | IDでセッション再開 |
+| `--print` | | 非対話モード |
+| `--quiet` | | 最小限出力（`--print` を暗黙指定） |
+| `--prompt` / `--command` | `-p` / `-c` | プロンプトを直接送信 |
+| `--agent` | | 組み込みエージェント選択（`default`、`okabe`） |
+| `--agent-file` | | カスタムエージェント仕様ファイル使用 |
+| `--mcp-config-file` | | MCP設定ロード（反復可能） |
+| `--skills-dir` | | スキルディレクトリ上書き |
+| `--verbose` | | 詳細出力有効化 |
+| `--debug` | | `~/.kimi/logs/kimi.log` へデバッグログ記録 |
+| `--max-steps-per-turn` | | 停止前の最大ステップ数 |
+| `--max-retries-per-step` | | 失敗時の最大リトライ数 |
 
-## Limitations (vs Claude Code)
+## 制限（vs Claude Code）
 
-| Feature | Claude Code | Kimi CLI | Impact |
+| 機能 | Claude Code | Kimi CLI | 影響 |
 |---------|------------|----------|--------|
-| Memory MCP | Built-in | Not built-in (configurable) | Recovery relies on AGENTS.md + files |
-| Task tool (subagents) | External (tmux-based) | Native (in-process swarm) | Kimi advantage for sub-delegation |
-| Skill system | Skill tool | `/skill:` + `/flow:` | Kimi flow skills more advanced |
-| Dynamic model switch | `/model` via send-keys | Not available in-session | Fixed at launch |
-| `/clear` context reset | Yes | Not available | Use `--continue` for resume |
-| Prompt caching | 90% discount | Unknown | Cost impact unclear |
-| Sandbox modes | None built-in | None (approval-only) | Similar security posture |
-| Alt-screen in tmux | No | No (shell-like UI) | Both tmux-friendly |
-| Structured output | Text only | `stream-json` in print mode | Kimi advantage for parsing |
-| Agent creation at runtime | No | CreateSubagent tool | Unique Kimi capability |
-| Time travel / checkpoints | No | DenwaRenji system | Unique Kimi capability |
-| Web UI | No | `kimi web` | Kimi advantage |
+| Memory MCP | 組み込み | 組み込みでない（設定可） | 復旧はAGENTS.md + ファイルに依存 |
+| Taskツール（サブエージェント） | 外部（tmuxベース） | ネイティブ（インプロセスswarm） | サブ委任でKimi優位 |
+| Skillシステム | Skillツール | `/skill:` + `/flow:` | Kimiフロースキルがより高度 |
+| 動的モデル切り替え | send-keys経由 `/model` | セッション内不可 | 起動時固定 |
+| `/clear` コンテキストリセット | あり | 不可 | 再開には `--continue` 使用 |
+| プロンプトキャッシング | 90%割引 | 不明 | コスト影響不明 |
+| サンドボックスモード | 組み込みなし | なし（承認のみ） | 類似セキュリティ姿勢 |
+| tmux内alt-screen | なし | なし（シェル風UI） | 両方tmuxフレンドリー |
+| 構造化出力 | テキストのみ | プリントモードで `stream-json` | 解析でKimi優位 |
+| 実行時エージェント作成 | なし | CreateSubagentツール | Kimi独自機能 |
+| タイムトラベル / チェックポイント | なし | DenwaRenjiシステム | Kimi独自機能 |
+| Web UI | なし | `kimi web` | Kimi優位 |
 
-## Environment Variables
+## 環境変数
 
-| Variable | Purpose |
+| 変数 | 目的 |
 |----------|---------|
-| `KIMI_SHARE_DIR` | Customize share directory (default: `~/.kimi/`) |
+| `KIMI_SHARE_DIR` | 共有ディレクトリカスタマイズ（デフォルト: `~/.kimi/`） |
 
-## Configuration Files Summary
+## 設定ファイルまとめ
 
-| File | Location | Purpose |
+| ファイル | 場所 | 目的 |
 |------|----------|---------|
-| `mcp.json` | `~/.kimi/` | MCP server definitions |
-| `metadata.json` | `~/.kimi-shared/` | Session metadata |
-| `kimi.log` | `~/.kimi/logs/` | Debug logs (with `--debug`) |
-| `AGENTS.md` | Repo root | Project instructions (auto-loaded) |
-| `agent.yaml` | Custom path | Agent specification |
-| `system.md` | Custom path | System prompt template |
-| `.agents/skills/` | Project root | Project-level skills |
+| `mcp.json` | `~/.kimi/` | MCPサーバー定義 |
+| `metadata.json` | `~/.kimi-shared/` | セッションメタデータ |
+| `kimi.log` | `~/.kimi/logs/` | デバッグログ（`--debug` 時） |
+| `AGENTS.md` | リポジトリルート | プロジェクト指示（自動ロード） |
+| `agent.yaml` | カスタムパス | エージェント仕様 |
+| `system.md` | カスタムパス | システムプロンプトテンプレート |
+| `.agents/skills/` | プロジェクトルート | プロジェクトレベルスキル |
 
 ---
 
-*Sources: [Kimi CLI GitHub](https://github.com/MoonshotAI/kimi-cli), [Getting Started](https://moonshotai.github.io/kimi-cli/en/guides/getting-started.html), [Agents & Subagents](https://moonshotai.github.io/kimi-cli/en/customization/agents.html), [Skills](https://moonshotai.github.io/kimi-cli/en/customization/skills.html), [MCP](https://moonshotai.github.io/kimi-cli/en/customization/mcp.html), [CLI Options (DeepWiki)](https://deepwiki.com/MoonshotAI/kimi-cli/2.3-command-line-options-reference), [Multi-Agent (DeepWiki)](https://deepwiki.com/MoonshotAI/kimi-cli/5.3-multi-agent-coordination), [Technical Deep Dive](https://llmmultiagents.com/en/blogs/kimi-cli-technical-deep-dive)*
+*情報源: [Kimi CLI GitHub](https://github.com/MoonshotAI/kimi-cli)、[Getting Started](https://moonshotai.github.io/kimi-cli/en/guides/getting-started.html)、[Agents & Subagents](https://moonshotai.github.io/kimi-cli/en/customization/agents.html)、[Skills](https://moonshotai.github.io/kimi-cli/en/customization/skills.html)、[MCP](https://moonshotai.github.io/kimi-cli/en/customization/mcp.html)、[CLI Options (DeepWiki)](https://deepwiki.com/MoonshotAI/kimi-cli/2.3-command-line-options-reference)、[Multi-Agent (DeepWiki)](https://deepwiki.com/MoonshotAI/kimi-cli/5.3-multi-agent-coordination)、[Technical Deep Dive](https://llmmultiagents.com/en/blogs/kimi-cli-technical-deep-dive)*

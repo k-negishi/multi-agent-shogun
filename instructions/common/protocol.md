@@ -1,129 +1,129 @@
-# Communication Protocol
+# 通信プロトコル
 
-## Mailbox System (inbox_write.sh)
+## メールボックスシステム（inbox_write.sh）
 
-Agent-to-agent communication uses file-based mailbox:
+エージェント間通信はファイルベースのメールボックスを使用:
 
 ```bash
 bash scripts/inbox_write.sh <target_agent> "<message>" <type> <from>
 ```
 
-Examples:
+例:
 ```bash
-# Shogun → Karo
+# 将軍 → 家老
 bash scripts/inbox_write.sh karo "cmd_048を書いた。実行せよ。" cmd_new shogun
 
-# Ashigaru → Karo
+# 足軽 → 家老
 bash scripts/inbox_write.sh karo "足軽5号、任務完了。報告YAML確認されたし。" report_received ashigaru5
 
-# Karo → Ashigaru
+# 家老 → 足軽
 bash scripts/inbox_write.sh ashigaru3 "タスクYAMLを読んで作業開始せよ。" task_assigned karo
 ```
 
-Delivery is handled by `inbox_watcher.sh` (infrastructure layer).
-**Agents NEVER call tmux send-keys directly.**
+配信は `inbox_watcher.sh`（インフラ層）が処理します。
+**エージェントは tmux send-keys を直接呼び出してはいけません。**
 
-## Delivery Mechanism
+## 配信メカニズム
 
-Two layers:
-1. **Message persistence**: `inbox_write.sh` writes to `queue/inbox/{agent}.yaml` with flock. Guaranteed.
-2. **Wake-up signal**: `inbox_watcher.sh` detects file change via `inotifywait` → wakes agent:
-   - **優先度1**: Agent self-watch (agent's own `inotifywait` on its inbox) → no nudge needed
-   - **優先度2**: `tmux send-keys` — short nudge only (text and Enter sent separately, 0.3s gap)
+2つのレイヤー:
+1. **メッセージ永続化**: `inbox_write.sh` が `queue/inbox/{agent}.yaml` にflockで書き込み。保証されている。
+2. **起床シグナル**: `inbox_watcher.sh` が `inotifywait` でファイル変更を検知 → エージェント起床:
+   - **優先度1**: Agent self-watch（エージェント自身の inbox への `inotifywait`）→ nudge不要
+   - **優先度2**: `tmux send-keys` — 短いnudgeのみ（テキストとEnterを別々に送信、0.3秒間隔）
 
-The nudge is minimal: `inboxN` (e.g. `inbox3` = 3 unread). That's it.
-**Agent reads the inbox file itself.** Message content never travels through tmux — only a short wake-up signal.
+nudgeは最小限: `inboxN`（例: `inbox3` = 3件未読）。それだけです。
+**エージェントは inbox ファイルを自分で読みます。** メッセージ内容は tmux を経由しません — 短い起床シグナルのみ。
 
-Safety note (shogun):
-- If the Shogun pane is active (the Lord is typing), `inbox_watcher.sh` must not inject keystrokes. It should use tmux `display-message` only.
-- Escalation keystrokes (`Escape×2`, `/clear`, `C-u`) must be suppressed for shogun to avoid clobbering human input.
+安全性注意（将軍）:
+- 将軍ペインがアクティブ（主君が入力中）の場合、`inbox_watcher.sh` はキーストロークを注入してはいけません。tmux `display-message` のみ使用すべき。
+- エスカレーションキーストローク（`Escape×2`、`/clear`、`C-u`）は将軍に対して抑制し、人間の入力を妨害しないこと。
 
-Special cases (CLI commands sent via `tmux send-keys`):
-- `type: clear_command` → sends `/clear` + Enter via send-keys
-- `type: model_switch` → sends the /model command via send-keys
+特殊ケース（`tmux send-keys` で送信されるCLIコマンド）:
+- `type: clear_command` → `/clear` + Enter を send-keys で送信
+- `type: model_switch` → /model コマンドを send-keys で送信
 
-## Agent Self-Watch Phase Policy (cmd_107)
+## エージェント自己監視フェーズポリシー（cmd_107）
 
-Phase migration is controlled by watcher flags:
+フェーズ移行はwatcherフラグで制御:
 
-- **Phase 1 (baseline)**: `process_unread_once` at startup + `inotifywait` event-driven loop + timeout fallback.
-- **Phase 2 (normal nudge off)**: `disable_normal_nudge` behavior enabled (`ASW_DISABLE_NORMAL_NUDGE=1` or `ASW_PHASE>=2`).
-- **Phase 3 (final escalation only)**: `FINAL_ESCALATION_ONLY=1` (or `ASW_PHASE>=3`) so normal `send-keys inboxN` is suppressed; escalation lane remains for recovery.
+- **フェーズ1（ベースライン）**: 起動時 `process_unread_once` + `inotifywait` イベント駆動ループ + タイムアウトフォールバック。
+- **フェーズ2（通常nudgeオフ）**: `disable_normal_nudge` 動作有効（`ASW_DISABLE_NORMAL_NUDGE=1` または `ASW_PHASE>=2`）。
+- **フェーズ3（最終エスカレーションのみ）**: `FINAL_ESCALATION_ONLY=1`（または `ASW_PHASE>=3`）で通常 `send-keys inboxN` を抑制; エスカレーションレーンは復旧用に残る。
 
-Read-cost controls:
+読み取りコスト制御:
 
-- `summary-first` routing: unread_count fast-path before full inbox parsing.
-- `no_idle_full_read`: timeout cycle with unread=0 must skip heavy read path.
-- Metrics hooks are recorded: `unread_latency_sec`, `read_count`, `estimated_tokens`.
+- `summary-first` ルーティング: 完全inbox解析前にunread_count高速パス。
+- `no_idle_full_read`: unread=0のタイムアウトサイクルは重い読み取りパスをスキップ必須。
+- メトリクスフックを記録: `unread_latency_sec`、`read_count`、`estimated_tokens`。
 
-**Escalation** (when nudge is not processed):
+**エスカレーション**（nudgeが処理されない場合）:
 
-| Elapsed | Action | Trigger |
+| 経過時間 | アクション | トリガー |
 |---------|--------|---------|
-| 0〜2 min | Standard pty nudge | Normal delivery |
-| 2〜4 min | Escape×2 + nudge | Cursor position bug workaround |
-| 4 min+ | `/clear` sent (max once per 5 min) | Force session reset + YAML re-read |
+| 0〜2分 | 標準pty nudge | 通常配信 |
+| 2〜4分 | Escape×2 + nudge | カーソル位置バグ回避策 |
+| 4分以上 | `/clear` 送信（5分に1回まで）| 強制セッションリセット + YAML再読込 |
 
-## Inbox Processing Protocol (karo/ashigaru/gunshi)
+## Inbox 処理プロトコル（家老/足軽/軍師）
 
-When you receive `inboxN` (e.g. `inbox3`):
-1. `Read queue/inbox/{your_id}.yaml`
-2. Find all entries with `read: false`
-3. Process each message according to its `type`
-4. Update each processed entry: `read: true` (use Edit tool)
-5. Resume normal workflow
+`inboxN`（例: `inbox3`）を受信したとき:
+1. `queue/inbox/{your_id}.yaml` を読む
+2. `read: false` のエントリをすべて見つける
+3. 各メッセージを `type` に応じて処理
+4. 処理済みの各エントリを更新: `read: true`（Edit toolを使用）
+5. 通常ワークフローに戻る
 
-### MANDATORY Post-Task Inbox Check
+### 必須: タスク後のInbox確認
 
-**After completing ANY task, BEFORE going idle:**
-1. Read `queue/inbox/{your_id}.yaml`
-2. If any entries have `read: false` → process them
-3. Only then go idle
+**いかなるタスク完了後も、アイドル状態になる前に:**
+1. `queue/inbox/{your_id}.yaml` を読む
+2. `read: false` のエントリがあれば → 処理する
+3. その後にアイドル状態へ
 
-This is NOT optional. If you skip this and a redo message is waiting,
-you will be stuck idle until the escalation sends `/clear` (~4 min).
+これはオプションではありません。これをスキップしてredoメッセージが待機していると、
+エスカレーションが `/clear` を送信するまでアイドル状態のままになります（約4分）。
 
-## Redo Protocol
+## Redo プロトコル
 
-When Karo determines a task needs to be redone:
+家老がタスクをやり直す必要があると判断したとき:
 
-1. Karo writes new task YAML with new task_id (e.g., `subtask_097d` → `subtask_097d2`), adds `redo_of` field
-2. Karo sends `clear_command` type inbox message (NOT `task_assigned`)
-3. inbox_watcher delivers `/clear` to the agent → session reset
-4. Agent recovers via Session Start procedure, reads new task YAML, starts fresh
+1. 家老が新しいタスクYAMLを新しいtask_idで書く（例: `subtask_097d` → `subtask_097d2`）、`redo_of` フィールドを追加
+2. 家老が `clear_command` タイプの inbox メッセージを送信（`task_assigned` ではない）
+3. inbox_watcher が `/clear` をエージェントに配信 → セッションリセット
+4. エージェントがセッション開始手順で復旧、新しいタスクYAMLを読んで新規開始
 
-Race condition is eliminated: `/clear` wipes old context. Agent re-reads YAML with new task_id.
+競合状態は排除: `/clear` が古いコンテキストを消去。エージェントは新しいtask_idでYAMLを再読込。
 
-## Report Flow (interrupt prevention)
+## 報告フロー（割り込み防止）
 
-| Direction | Method | Reason |
+| 方向 | 方法 | 理由 |
 |-----------|--------|--------|
-| Ashigaru/Gunshi → Karo | Report YAML + inbox_write | File-based notification |
-| Karo → Shogun/Lord | dashboard.md update only | **inbox to shogun FORBIDDEN** — prevents interrupting Lord's input |
-| Karo → Gunshi | YAML + inbox_write | Strategic task delegation |
-| Top → Down | YAML + inbox_write | Standard wake-up |
+| 足軽/軍師 → 家老 | Report YAML + inbox_write | ファイルベース通知 |
+| 家老 → 将軍/主君 | dashboard.md 更新のみ | **将軍へのinbox禁止** — 主君の入力を中断しない |
+| 家老 → 軍師 | YAML + inbox_write | 戦略タスク委任 |
+| 上 → 下 | YAML + inbox_write | 標準的な起床 |
 
-## File Operation Rule
+## ファイル操作ルール
 
-**Always Read before Write/Edit.** Claude Code rejects Write/Edit on unread files.
+**Write/Edit前に必ずRead。** Claude Codeは未読ファイルへのWrite/Editを拒否します。
 
-## Inbox Communication Rules
+## Inbox通信ルール
 
-### Sending Messages
+### メッセージ送信
 
 ```bash
 bash scripts/inbox_write.sh <target> "<message>" <type> <from>
 ```
 
-**No sleep interval needed.** No delivery confirmation needed. Multiple sends can be done in rapid succession — flock handles concurrency.
+**sleep間隔不要。** 配信確認不要。複数送信を連続実行可能 — flockが並行性を処理。
 
-### Report Notification Protocol
+### 報告通知プロトコル
 
-After writing report YAML, notify Karo:
+報告YAML書き込み後、家老に通知:
 
 ```bash
 bash scripts/inbox_write.sh karo "足軽{N}号、任務完了でござる。報告書を確認されよ。" report_received ashigaru{N}
 ```
 
-That's it. No state checking, no retry, no delivery verification.
-The inbox_write guarantees persistence. inbox_watcher handles delivery.
+これだけ。状態確認不要、リトライ不要、配信確認不要。
+inbox_writeが永続性を保証。inbox_watcherが配信処理。

@@ -1,181 +1,181 @@
-# Codex CLI Tools
+# Codex CLI ツール
 
-This section describes OpenAI Codex CLI-specific tools and features.
+このセクションはOpenAI Codex CLI固有のツールと機能を説明します。
 
-## Tool Usage
+## ツール使用法
 
-Codex CLI provides tools for file operations, code execution, and system interaction within a sandboxed environment:
+Codex CLIはサンドボックス環境内でのファイル操作、コード実行、システム対話のためのツールを提供:
 
-- **File Read/Write**: Read and edit files within the working directory (controlled by sandbox mode)
-- **Shell Commands**: Execute terminal commands with approval policies controlling when user consent is required
-- **Web Search**: Integrated web search via `--search` flag (cached by default, live mode available)
-- **Code Review**: Built-in `/review` command reads diff and reports prioritized findings without modifying files
-- **Image Input**: Attach images via `-i`/`--image` flag or paste into composer for multimodal analysis
-- **MCP Tools**: Extensible via Model Context Protocol servers configured in `~/.codex/config.toml`
+- **File Read/Write**: 作業ディレクトリ内のファイル読み書き（サンドボックスモードで制御）
+- **Shell Commands**: 承認ポリシーがユーザー同意を要求するタイミングを制御して端末コマンドを実行
+- **Web Search**: `--search` フラグ経由の統合Web検索（デフォルトでキャッシュ、ライブモード利用可）
+- **Code Review**: 組み込み `/review` コマンドがdiffを読み、ファイルを修正せずに優先順位付けられた発見を報告
+- **Image Input**: `-i`/`--image` フラグで画像添付、またはマルチモーダル分析のためcomposerに貼り付け
+- **MCP Tools**: `~/.codex/config.toml` で設定されたModel Context Protocolサーバー経由で拡張可能
 
-## Tool Guidelines
+## ツールガイドライン
 
-1. **Sandbox-aware operations**: All file/command operations are constrained by the active sandbox mode
-2. **Approval policy compliance**: Respect the configured `--ask-for-approval` setting — never bypass unless explicitly configured
-3. **AGENTS.md auto-load**: Instructions are loaded automatically from Git root to CWD; no manual cache clearing needed
-4. **Non-interactive mode**: Use `codex exec` for headless automation with JSONL output
+1. **サンドボックス認識操作**: すべてのファイル/コマンド操作はアクティブなサンドボックスモードで制約される
+2. **承認ポリシー遵守**: 設定された `--ask-for-approval` 設定を尊重 — 明示的に設定されない限りバイパスしない
+3. **AGENTS.md自動ロード**: Gitルートから現在作業ディレクトリまで指示が自動ロード; 手動キャッシュクリア不要
+4. **非対話モード**: ヘッドレス自動化には JSONL出力の `codex exec` を使用
 
-## Permission Model
+## 権限モデル
 
-Codex uses a two-axis security model: **sandbox mode** (technical capabilities) + **approval policy** (when to pause).
+Codexは二軸セキュリティモデルを使用: **サンドボックスモード**（技術的能力） + **承認ポリシー**（いつ停止するか）。
 
-### Sandbox Modes (`--sandbox` / `-s`)
+### サンドボックスモード（`--sandbox` / `-s`）
 
-| Mode | File Access | Commands | Network |
+| モード | ファイルアクセス | コマンド | ネットワーク |
 |------|------------|----------|---------|
-| `read-only` | Read only | Blocked | Blocked |
-| `workspace-write` | Read/write in CWD + /tmp | Allowed in workspace | Blocked by default |
-| `danger-full-access` | Unrestricted | Unrestricted | Allowed |
+| `read-only` | 読み取りのみ | ブロック | ブロック |
+| `workspace-write` | CWD + /tmp で読み書き | ワークスペース内で許可 | デフォルトでブロック |
+| `danger-full-access` | 無制限 | 無制限 | 許可 |
 
-### Approval Policies (`--ask-for-approval` / `-a`)
+### 承認ポリシー（`--ask-for-approval` / `-a`）
 
-| Policy | Behavior |
+| ポリシー | 動作 |
 |--------|----------|
-| `untrusted` | Auto-executes workspace operations; asks for untrusted commands |
-| `on-failure` | Asks only when errors occur |
-| `on-request` | Pauses before actions outside workspace, network access, untrusted commands |
-| `never` | No approval prompts (respects sandbox constraints) |
+| `untrusted` | ワークスペース操作を自動実行; 信頼されないコマンドは質問 |
+| `on-failure` | エラー発生時のみ質問 |
+| `on-request` | ワークスペース外の操作、ネットワークアクセス、信頼されないコマンドの前に停止 |
+| `never` | 承認プロンプトなし（サンドボックス制約を尊重） |
 
-### Shortcut Flags
+### ショートカットフラグ
 
-- `--full-auto`: Sets `--ask-for-approval on-request` + `--sandbox workspace-write` (recommended for unattended work)
-- `--dangerously-bypass-approvals-and-sandbox` / `--yolo`: Bypasses all approvals and sandboxing (unsafe, VM-only)
+- `--full-auto`: `--ask-for-approval on-request` + `--sandbox workspace-write` を設定（無人作業推奨）
+- `--dangerously-bypass-approvals-and-sandbox` / `--yolo`: すべての承認とサンドボックスをバイパス（危険、VM専用）
 
-**Shogun system usage**: Ashigaru run with `--full-auto` or `--yolo` depending on settings.yaml `cli.options.codex.approval_policy`.
+**将軍システム使用法**: 足軽は settings.yaml の `cli.options.codex.approval_policy` に応じて `--full-auto` または `--yolo` で実行。
 
-## Memory / State Management
+## Memory / State管理
 
-### AGENTS.md (Codex's instruction file)
+### AGENTS.md（Codexの指示ファイル）
 
-Codex reads `AGENTS.md` files automatically before doing any work. Discovery order:
+Codexは作業前に `AGENTS.md` ファイルを自動的に読む。発見順序:
 
-1. **Global**: `~/.codex/AGENTS.md` or `~/.codex/AGENTS.override.md`
-2. **Project**: Walking from Git root to CWD, checking each directory for `AGENTS.override.md` then `AGENTS.md`
+1. **グローバル**: `~/.codex/AGENTS.md` または `~/.codex/AGENTS.override.md`
+2. **プロジェクト**: Gitルートから現在作業ディレクトリまでウォークし、各ディレクトリで `AGENTS.override.md` → `AGENTS.md` をチェック
 
-Files are merged root-downward (closer directories override earlier guidance).
+ファイルはルートから下向きにマージ（近いディレクトリが以前のガイダンスを上書き）。
 
-**Key constraints**:
-- Combined size cap: `project_doc_max_bytes` (default 32 KiB, configurable in `config.toml`)
-- Empty files are skipped; only one file per directory is included
-- `AGENTS.override.md` temporarily replaces `AGENTS.md` at the same level
+**主要制約**:
+- 合計サイズ上限: `project_doc_max_bytes`（デフォルト32 KiB、`config.toml` で設定可）
+- 空ファイルはスキップ; ディレクトリごとに1ファイルのみ含まれる
+- `AGENTS.override.md` は同レベルの `AGENTS.md` を一時的に置換
 
-**Customization** (`~/.codex/config.toml`):
+**カスタマイズ**（`~/.codex/config.toml`）:
 ```toml
 project_doc_fallback_filenames = ["TEAM_GUIDE.md", ".agents.md"]
 project_doc_max_bytes = 65536
 ```
 
-Set `CODEX_HOME` env var for project-specific automation profiles.
+プロジェクト固有の自動化プロファイルには `CODEX_HOME` 環境変数を設定。
 
-### Session Persistence
+### セッション永続性
 
-Sessions are stored locally. Use `/resume` or `codex exec resume` to continue previous conversations.
+セッションはローカルに保存。以前の会話を継続するには `/resume` または `codex exec resume` を使用。
 
-### No Memory MCP equivalent
+### Memory MCP相当なし
 
-Codex does not have a built-in persistent memory system like Claude Code's Memory MCP. For cross-session knowledge, rely on:
-- AGENTS.md (project-level instructions)
-- File-based state (queue/tasks/*.yaml, queue/reports/*.yaml)
-- MCP servers if configured
+CodexはClaude CodeのMemory MCPのような組み込み永続メモリシステムを持たない。セッション横断の知識には以下に依存:
+- AGENTS.md（プロジェクトレベル指示）
+- ファイルベース状態（queue/tasks/*.yaml、queue/reports/*.yaml）
+- 設定されている場合MCPサーバー
 
-## Codex-Specific Commands (Slash Commands)
+## Codex固有コマンド（スラッシュコマンド）
 
-### Session Management
+### セッション管理
 
-| Command | Purpose | Claude Code equivalent |
+| コマンド | 目的 | Claude Code相当 |
 |---------|---------|----------------------|
-| `/new` | Start fresh conversation within current session | `/clear` (closest) |
-| `/resume` | Resume a saved conversation | `claude --continue` |
-| `/fork` | Fork current conversation into new thread | No equivalent |
-| `/quit` / `/exit` | Terminate session | Ctrl-C |
-| `/compact` | Summarize conversation to free tokens | Auto-compaction |
+| `/new` | 現セッション内で新しい会話を開始 | `/clear`（最も近い） |
+| `/resume` | 保存された会話を再開 | `claude --continue` |
+| `/fork` | 現在の会話を新しいスレッドに分岐 | 相当なし |
+| `/quit` / `/exit` | セッション終了 | Ctrl-C |
+| `/compact` | 会話を要約してトークンを解放 | 自動compaction |
 
-### Configuration
+### 設定
 
-| Command | Purpose | Claude Code equivalent |
+| コマンド | 目的 | Claude Code相当 |
 |---------|---------|----------------------|
-| `/model` | Choose active model (+ reasoning effort) | `/model` |
-| `/personality` | Choose communication style | No equivalent |
-| `/permissions` | Set approval/sandbox levels | No equivalent (set at launch) |
-| `/status` | Display session config and token usage | No equivalent |
+| `/model` | アクティブモデルを選択（+ reasoning effort） | `/model` |
+| `/personality` | コミュニケーションスタイルを選択 | 相当なし |
+| `/permissions` | 承認/サンドボックスレベルを設定 | 相当なし（起動時に設定） |
+| `/status` | セッション設定とトークン使用量を表示 | 相当なし |
 
-### Workspace Tools
+### ワークスペースツール
 
-| Command | Purpose | Claude Code equivalent |
+| コマンド | 目的 | Claude Code相当 |
 |---------|---------|----------------------|
-| `/diff` | Show Git diff including untracked files | `git diff` via Bash |
-| `/review` | Analyze working tree for issues | Manual review via tools |
-| `/mention` | Attach a file to conversation | `@` fuzzy search |
-| `/ps` | Show background terminals and output | No equivalent |
-| `/mcp` | List configured MCP tools | No equivalent |
-| `/apps` | Browse connectors/apps | No equivalent |
-| `/init` | Generate AGENTS.md scaffold | No equivalent |
+| `/diff` | 未追跡ファイル含むGit diffを表示 | Bash経由の `git diff` |
+| `/review` | 作業ツリーの問題を分析 | ツール経由の手動レビュー |
+| `/mention` | ファイルを会話に添付 | `@` ファジー検索 |
+| `/ps` | バックグラウンド端末と出力を表示 | 相当なし |
+| `/mcp` | 設定されたMCPツールをリスト | 相当なし |
+| `/apps` | コネクター/アプリを閲覧 | 相当なし |
+| `/init` | AGENTS.md スキャフォールドを生成 | 相当なし |
 
-**Key difference from Claude Code**: Codex uses `/new` instead of `/clear` for context reset. `/new` starts a fresh conversation but the session remains active. `/compact` explicitly triggers conversation summarization (Claude Code does this automatically).
+**Claude Codeとの主要な違い**: Codexはコンテキストリセットに `/clear` ではなく `/new` を使用。`/new` は新しい会話を開始するがセッションはアクティブなまま。`/compact` は明示的に会話の要約をトリガー（Claude Codeは自動実行）。
 
-## Compaction Recovery
+## Compaction復旧
 
-Codex handles compaction differently from Claude Code:
+CodexはClaude Codeと異なる方法でcompactionを処理:
 
-1. **Automatic**: Codex auto-compacts when approaching context limits (similar to Claude Code)
-2. **Manual**: Use `/compact` to explicitly trigger summarization
-3. **Recovery procedure**: After compaction or `/new`, the AGENTS.md is automatically re-read
+1. **自動**: Codexはコンテキスト限界に近づくと自動compaction（Claude Codeと同様）
+2. **手動**: `/compact` を使って明示的に要約をトリガー
+3. **復旧手順**: compactionまたは `/new` 後、AGENTS.mdが自動的に再読み込みされる
 
-### Shogun System Recovery (Codex Ashigaru)
+### 将軍システム復旧（Codex足軽）
 
 ```
-Step 1: AGENTS.md is auto-loaded (contains recovery procedure)
-Step 2: Read queue/tasks/ashigaru{N}.yaml → determine current task
-Step 3: If task has "target_path:" → read that file
-Step 4: Resume work based on task status
+ステップ1: AGENTS.mdが自動ロード（復旧手順を含む）
+ステップ2: queue/tasks/ashigaru{N}.yamlを読む → 現在のタスクを判定
+ステップ3: タスクに "target_path:" があれば → そのファイルを読む
+ステップ4: タスクステータスに基づき作業再開
 ```
 
-**Note**: Unlike Claude Code, Codex has no `mcp__memory__read_graph` equivalent. Recovery relies entirely on AGENTS.md + YAML files.
+**注意**: Claude Codeと異なり、Codexには `mcp__memory__read_graph` 相当がない。復旧は完全にAGENTS.md + YAMLファイルに依存。
 
-## tmux Interaction
+## tmux対話
 
-### TUI Mode (default `codex`)
+### TUIモード（デフォルト `codex`）
 
-- Codex runs a fullscreen TUI using alt-screen
-- `--no-alt-screen` flag disables alternate screen mode (critical for tmux integration)
-- With `--no-alt-screen`, send-keys and capture-pane should work similarly to Claude Code
-- Prompt detection: TUI prompt format differs from Claude Code's `❯` — pattern TBD after testing
+- Codexはalt-screenを使用するフルスクリーンTUIを実行
+- `--no-alt-screen` フラグで代替画面モードを無効化（tmux統合に重要）
+- `--no-alt-screen` では、send-keysとcapture-paneはClaude Codeと同様に動作するはず
+- プロンプト検出: TUIプロンプトフォーマットはClaude Codeの `❯` と異なる — パターンはテスト後TBD
 
-### Non-Interactive Mode (`codex exec`)
+### 非対話モード（`codex exec`）
 
-- Runs headless, outputs to stdout (text or JSONL with `--json`)
-- No alt-screen issues — ideal for tmux pane integration
-- `codex exec --full-auto --json "task description"` for automated execution
-- Can resume sessions: `codex exec resume`
-- Output file support: `--output-last-message, -o` writes final message to file
+- ヘッドレスで実行、stdoutに出力（`--json` でテキストまたはJSONL）
+- alt-screen問題なし — tmuxペイン統合に理想的
+- `codex exec --full-auto --json "task description"` で自動実行
+- セッション再開可能: `codex exec resume`
+- 出力ファイル対応: `--output-last-message, -o` が最終メッセージをファイルに書き込み
 
-### send-keys Compatibility
+### send-keys互換性
 
-| Mode | send-keys | capture-pane | Notes |
+| モード | send-keys | capture-pane | 注記 |
 |------|-----------|-------------|-------|
-| TUI (default) | Risky (alt-screen) | Risky | Use `--no-alt-screen` |
-| TUI + `--no-alt-screen` | Should work | Should work | Preferred for tmux |
-| `codex exec` | N/A (non-interactive) | stdout capture | Best for automation |
+| TUI（デフォルト） | リスク（alt-screen） | リスク | `--no-alt-screen` を使用 |
+| TUI + `--no-alt-screen` | 動作するはず | 動作するはず | tmux用推奨 |
+| `codex exec` | N/A（非対話） | stdout キャプチャ | 自動化に最適 |
 
-### Nudge Mechanism
+### Nudgeメカニズム
 
-For TUI mode with `--no-alt-screen`:
-- inbox_watcher.sh sends nudge text (e.g., `inbox3`) via tmux send-keys
-- Safety (shogun): if the Shogun pane is active (the Lord is typing), watcher avoids send-keys and uses tmux `display-message` only
-- After receiving a nudge, the agent reads `queue/inbox/<agent>.yaml` and processes unread messages
+TUIモード + `--no-alt-screen` の場合:
+- inbox_watcher.shがnudgeテキスト（例: `inbox3`）をtmux send-keys経由で送信
+- 安全性（将軍）: 将軍ペインがアクティブ（主君が入力中）の場合、watcherはsend-keysを避けtmux `display-message` のみ使用
+- nudge受信後、エージェントは `queue/inbox/<agent>.yaml` を読み未読メッセージを処理
 
-For `codex exec` mode:
-- Each task is a separate `codex exec` invocation
-- No nudge needed — task content is passed as argument
+`codex exec` モードの場合:
+- 各タスクは別個の `codex exec` 呼び出し
+- nudge不要 — タスク内容は引数として渡される
 
-## MCP Configuration
+## MCP設定
 
-Codex configures MCP servers in `~/.codex/config.toml`:
+Codexは `~/.codex/config.toml` でMCPサーバーを設定:
 
 ```toml
 [mcp_servers.memory]
@@ -189,47 +189,47 @@ command = "npx"
 args = ["-y", "@anthropic/github-mcp"]
 ```
 
-### Key differences from Claude Code MCP:
+### Claude Code MCPとの主要な違い:
 
-| Aspect | Claude Code | Codex CLI |
+| 側面 | Claude Code | Codex CLI |
 |--------|------------|-----------|
-| Config format | JSON (`.mcp.json`) | TOML (`config.toml`) |
-| Server types | stdio, SSE | stdio, Streamable HTTP |
-| OAuth support | No | Yes (`codex mcp login`) |
-| Tool filtering | No | `enabled_tools` / `disabled_tools` |
-| Timeout config | No | `startup_timeout_sec`, `tool_timeout_sec` |
-| Add command | `claude mcp add` | `codex mcp add` |
+| 設定フォーマット | JSON（`.mcp.json`） | TOML（`config.toml`） |
+| サーバータイプ | stdio、SSE | stdio、Streamable HTTP |
+| OAuth対応 | なし | あり（`codex mcp login`） |
+| ツールフィルタリング | なし | `enabled_tools` / `disabled_tools` |
+| タイムアウト設定 | なし | `startup_timeout_sec`、`tool_timeout_sec` |
+| 追加コマンド | `claude mcp add` | `codex mcp add` |
 
-## Model Selection
+## モデル選択
 
-### Command Line
+### コマンドライン
 
 ```bash
-codex --model codex-mini-latest      # Lightweight model
-codex --model gpt-5.3-codex          # Full model (subscription)
-codex --model o4-mini                # Reasoning model
+codex --model codex-mini-latest      # 軽量モデル
+codex --model gpt-5.3-codex          # フルモデル（サブスクリプション）
+codex --model o4-mini                # 推論モデル
 ```
 
-### In-Session
+### セッション内
 
-Use `/model` to switch models during a session (includes reasoning effort setting when available).
+セッション中にモデルを切り替えるには `/model` を使用（利用可能な場合reasoning effort設定を含む）。
 
-### Shogun System
+### 将軍システム
 
-Model is set by `build_cli_command()` in cli_adapter.sh based on settings.yaml. Karo cannot dynamically switch Codex models via inbox (no `/model` send-keys equivalent in exec mode).
+モデルは settings.yaml に基づき cli_adapter.sh の `build_cli_command()` で設定。家老はinbox経由でCodexモデルを動的に切り替え不可（execモードに `/model` send-keys相当なし）。
 
-## Limitations (vs Claude Code)
+## 制限（vs Claude Code）
 
-| Feature | Claude Code | Codex CLI | Impact |
+| 機能 | Claude Code | Codex CLI | 影響 |
 |---------|------------|-----------|--------|
-| Memory MCP | Built-in | Not built-in (configurable) | Recovery relies on AGENTS.md + files |
-| Task tool (subagents) | Yes | No | Cannot spawn sub-agents |
-| Skill system | Yes | No | No slash command skills |
-| Dynamic model switch | `/model` via send-keys | `/model` in TUI only | Limited in automated mode |
-| `/clear` context reset | Yes | `/new` (TUI only) | Exec mode: new invocation |
-| Prompt caching | 90% discount | 75% discount | Higher cost per token |
-| Subscription limits | API-based (no limit) | msg/5h limits (Plus/Pro) | Bottleneck for parallel ops |
-| Alt-screen | No (terminal-native) | Yes (TUI, unless `--no-alt-screen`) | tmux integration risk |
-| Sandbox | None built-in | OS-level (landlock/seatbelt) | Safer automated execution |
-| Structured output | Text only | JSONL (`--json`) | Better for parsing |
-| Local/OSS models | No | Yes (`--oss` via Ollama) | Offline/cost-free option |
+| Memory MCP | 組み込み | 組み込みでない（設定可） | 復旧はAGENTS.md + ファイルに依存 |
+| Taskツール（サブエージェント） | あり | なし | サブエージェント生成不可 |
+| Skillシステム | あり | なし | スラッシュコマンドスキルなし |
+| 動的モデル切り替え | send-keys経由の `/model` | TUIのみ `/model` | 自動化モードで制限 |
+| `/clear` コンテキストリセット | あり | `/new`（TUIのみ） | Execモード: 新規呼び出し |
+| プロンプトキャッシング | 90%割引 | 75%割引 | トークンあたりコスト高 |
+| サブスクリプション制限 | APIベース（制限なし） | msg/5h制限（Plus/Pro） | 並列操作のボトルネック |
+| Alt-screen | なし（ターミナルネイティブ） | あり（TUI、`--no-alt-screen` 以外） | tmux統合リスク |
+| サンドボックス | 組み込みなし | OS レベル（landlock/seatbelt） | より安全な自動実行 |
+| 構造化出力 | テキストのみ | JSONL（`--json`） | 解析に優れる |
+| ローカル/OSSモデル | なし | あり（Ollama経由の `--oss`） | オフライン/コスト無しオプション |

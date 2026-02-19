@@ -1,60 +1,59 @@
-# Template: Proposal Integration (TMPL-INTEG-PROPOSAL)
+# テンプレート: 提案統合（TMPL-INTEG-PROPOSAL）
 
-> **Use when**: Integrating proposals, recommendations, or strategy documents from
-> multiple experts/perspectives. Focus on aligning underlying assumptions.
+> **使用タイミング**: 複数の専門家/視点からの提案、推奨、または戦略文書を統合する場合。基礎前提の整合に焦点。
 
-## Pre-Integration Checklist
+## 統合前チェックリスト
 
-- [ ] Extract the core assumption behind each proposal
-- [ ] Identify where assumptions conflict
-- [ ] Resolve assumption conflicts before merging recommendations
-- [ ] Check that merged recommendations don't contradict each other
+- [ ] 各提案の背後にあるコア前提を抽出
+- [ ] 前提が矛盾する箇所を識別
+- [ ] 推奨をマージする前に前提の矛盾を解決
+- [ ] マージされた推奨が互いに矛盾しないことを確認
 
-## Assumption Extraction Template
+## 前提抽出テンプレート
 
-For each input:
+各入力について:
 
 ```
-Report: [filename]
-Expert/Perspective: [who]
-Core Assumptions:
-  1. [Assumption about the current state]
-  2. [Assumption about constraints]
-  3. [Assumption about goals/priorities]
-Recommendations:
-  1. [Recommendation] — based on assumption [#]
-  2. [Recommendation] — based on assumption [#]
+報告: [ファイル名]
+専門家/視点: [誰]
+コア前提:
+  1. [現在状態に関する前提]
+  2. [制約に関する前提]
+  3. [ゴール/優先順位に関する前提]
+推奨:
+  1. [推奨] — 前提[#]に基づく
+  2. [推奨] — 前提[#]に基づく
 ```
 
-## Assumption Alignment Matrix
+## 前提整合マトリックス
 
-| Assumption Topic | Expert A | Expert B | Expert C | Aligned? |
+| 前提トピック | 専門家A | 専門家B | 専門家C | 整合？ |
 |-----------------|----------|----------|----------|----------|
-| Current state | ... | ... | ... | YES/NO |
-| Constraints | ... | ... | ... | YES/NO |
-| Priorities | ... | ... | ... | YES/NO |
+| 現在状態 | ... | ... | ... | YES/NO |
+| 制約 | ... | ... | ... | YES/NO |
+| 優先順位 | ... | ... | ... | YES/NO |
 
-## Integration Approach
+## 統合アプローチ
 
-1. **Align assumptions first** — establish a shared factual baseline
-2. **Group complementary recommendations** — proposals that don't conflict
-3. **Resolve competing recommendations** — choose based on aligned assumptions
-4. **Synthesize** — create unified strategy that incorporates the best of each input
+1. **まず前提を整合** — 共有された事実ベースラインを確立
+2. **補完的推奨をグループ化** — 矛盾しない提案
+3. **競合する推奨を解決** — 整合された前提に基づいて選択
+4. **統合** — 各入力の最良を組み込んだ統一戦略を作成
 
-## Output Structure
+## 出力構造
 
 ```markdown
-## Assumption Alignment
-[Table showing resolved assumptions]
+## 前提整合
+[解決された前提を示す表]
 
-## Integrated Recommendations
-### Priority 1: [Recommendation]
-- Source: [Expert A + B, aligned on assumption X]
-- Rationale: ...
+## 統合された推奨
+### 優先度1: [推奨]
+- ソース: [専門家A + B、前提Xで整合]
+- 根拠: ...
 
-### Priority 2: [Recommendation]
+### 優先度2: [推奨]
 ...
 
-## Discarded Recommendations
-- [Recommendation from Expert C] — discarded because assumption Y was incorrect
+## 廃棄された推奨
+- [専門家Cからの推奨] — 前提Yが誤りのため廃棄
 ```

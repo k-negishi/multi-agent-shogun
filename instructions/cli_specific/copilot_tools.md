@@ -1,176 +1,176 @@
-# GitHub Copilot CLI Tools
+# GitHub Copilot CLI ツール
 
-This section describes GitHub Copilot CLI-specific tools and features.
+このセクションはGitHub Copilot CLI固有のツールと機能を説明します。
 
-## Overview
+## 概要
 
-GitHub Copilot CLI (`copilot`) is a standalone terminal-based AI coding agent. **NOT** the deprecated `gh copilot` extension (suggest/explain only). The standalone CLI uses the same agentic harness as GitHub's Copilot coding agent.
+GitHub Copilot CLI（`copilot`）はスタンドアロンの端末ベースAIコーディングエージェント。非推奨の `gh copilot` 拡張（suggest/explainのみ）では**ない**。スタンドアロンCLIはGitHubのCopilotコーディングエージェントと同じエージェンティックハーネスを使用。
 
-- **Launch**: `copilot` (interactive TUI)
-- **Install**: `brew install copilot-cli` / `npm install -g @github/copilot` / `winget install GitHub.Copilot`
-- **Auth**: GitHub account with active Copilot subscription. Env vars: `GH_TOKEN` or `GITHUB_TOKEN`
-- **Default model**: Claude Sonnet 4.5
+- **起動**: `copilot`（対話TUI）
+- **インストール**: `brew install copilot-cli` / `npm install -g @github/copilot` / `winget install GitHub.Copilot`
+- **認証**: アクティブなCopilotサブスクリプション付きGitHubアカウント。環境変数: `GH_TOKEN` または `GITHUB_TOKEN`
+- **デフォルトモデル**: Claude Sonnet 4.5
 
-## Tool Usage
+## ツール使用法
 
-Copilot CLI provides tools requiring user approval before execution:
+Copilot CLIは実行前にユーザー承認を要するツールを提供:
 
-- **File operations**: touch, chmod, file read/write/edit
-- **Execution tools**: node, sed, shell commands (via `!` prefix in TUI)
-- **Network tools**: curl, wget, fetch
-- **web_fetch**: Retrieves URL content as markdown (URL access controlled via `~/.copilot/config`)
-- **MCP tools**: GitHub MCP server built-in (issues, PRs, Copilot Spaces), custom MCP servers via `/mcp add`
+- **ファイル操作**: touch、chmod、ファイル読み書き編集
+- **実行ツール**: node、sed、シェルコマンド（TUI内の `!` プレフィックス経由）
+- **ネットワークツール**: curl、wget、fetch
+- **web_fetch**: URL内容をmarkdownとして取得（URLアクセスは `~/.copilot/config` 経由で制御）
+- **MCPツール**: GitHubMCPサーバー組み込み（issues、PR、Copilot Spaces）、カスタムMCPサーバーは `/mcp add` 経由
 
-### Approval Model
+### 承認モデル
 
-- One-time permission or session-wide allowance per tool
-- Bypass all: `--allow-all-paths`, `--allow-all-urls`, `--allow-all` / `--yolo`
-- Tool filtering: `--available-tools` (allowlist), `--excluded-tools` (denylist)
+- ツールごとに一度だけの許可またはセッション全体の許可
+- すべてバイパス: `--allow-all-paths`、`--allow-all-urls`、`--allow-all` / `--yolo`
+- ツールフィルタリング: `--available-tools`（許可リスト）、`--excluded-tools`（拒否リスト）
 
-## Interaction Model
+## 対話モデル
 
-Three interaction modes (cycle with **Shift+Tab**):
+3つの対話モード（**Shift+Tab** で循環）:
 
-1. **Agent mode (Autopilot)**: Autonomous multi-step execution with tool calls
-2. **Plan mode**: Collaborative planning before code generation
-3. **Q&A mode**: Direct question-answer interaction
+1. **エージェントモード（Autopilot）**: ツール呼び出しを伴う自律的複数ステップ実行
+2. **プランモード**: コード生成前の協調的計画
+3. **Q&Aモード**: 直接的な質問-回答対話
 
-### Built-in Custom Agents
+### 組み込みカスタムエージェント
 
-Invoke via `/agent` command, `--agent=<name>` flag, or reference in prompt:
+`/agent` コマンド、`--agent=<name>` フラグ、またはプロンプト内参照で呼び出し:
 
-| Agent | Purpose | Notes |
+| エージェント | 目的 | 注記 |
 |-------|---------|-------|
-| **Explore** | Fast codebase analysis | Runs in parallel, doesn't clutter main context |
-| **Task** | Run commands (tests, builds) | Brief summary on success, full output on failure |
-| **Plan** | Dependency analysis + planning | Analyzes structure before suggesting changes |
-| **Code-review** | Review changes | High signal-to-noise ratio, genuine issues only |
+| **Explore** | 高速コードベース分析 | 並列実行、メインコンテキストを乱さない |
+| **Task** | コマンド実行（テスト、ビルド） | 成功時は簡潔な要約、失敗時は完全出力 |
+| **Plan** | 依存関係分析 + 計画 | 変更提案前に構造を分析 |
+| **Code-review** | 変更レビュー | 高いシグナル対ノイズ比、真の問題のみ |
 
-Copilot automatically delegates to agents and runs multiple agents in parallel.
+Copilotは自動的にエージェントに委任し、複数エージェントを並列実行。
 
-## Commands
+## コマンド
 
-| Command | Description |
+| コマンド | 説明 |
 |---------|-------------|
-| `/model` | Switch model (Claude Sonnet 4.5, Claude Sonnet 4, GPT-5) |
-| `/agent` | Select or invoke a built-in/custom agent |
-| `/delegate` (or `&` prefix) | Push work to Copilot coding agent (remote) |
-| `/resume` | Cycle through local/remote sessions (Tab to cycle) |
-| `/compact` | Manual context compression |
-| `/context` | Visualize token usage breakdown |
-| `/review` | Code review |
-| `/mcp add` | Add custom MCP server |
-| `/add-dir` | Add directory to context |
-| `/cwd` or `/cd` | Change working directory |
-| `/login` | Authentication |
-| `/lsp` | View LSP server status |
-| `/feedback` | Submit feedback |
-| `!<command>` | Execute shell command directly |
-| `@path/to/file` | Include file as context (Tab to autocomplete) |
+| `/model` | モデル切り替え（Claude Sonnet 4.5、Claude Sonnet 4、GPT-5） |
+| `/agent` | 組み込み/カスタムエージェントを選択または呼び出し |
+| `/delegate`（または `&` プレフィックス） | Copilotコーディングエージェント（リモート）に作業をプッシュ |
+| `/resume` | ローカル/リモートセッションを循環（Tabで循環） |
+| `/compact` | 手動コンテキスト圧縮 |
+| `/context` | トークン使用量の内訳を可視化 |
+| `/review` | コードレビュー |
+| `/mcp add` | カスタムMCPサーバー追加 |
+| `/add-dir` | ディレクトリをコンテキストに追加 |
+| `/cwd` または `/cd` | 作業ディレクトリ変更 |
+| `/login` | 認証 |
+| `/lsp` | LSPサーバーステータス表示 |
+| `/feedback` | フィードバック送信 |
+| `!<command>` | シェルコマンドを直接実行 |
+| `@path/to/file` | ファイルをコンテキストに含める（Tabで自動補完） |
 
-**No `/clear` command** — use `/compact` for context reduction or Ctrl+C + restart for full reset.
+**/clear コマンドなし** — コンテキスト削減には `/compact` を使用、または完全リセットにはCtrl+C + 再起動。
 
-### Key Bindings
+### キーバインディング
 
-| Key | Action |
+| キー | アクション |
 |-----|--------|
-| **Esc** | Stop current operation / reject tool permission |
-| **Shift+Tab** | Toggle plan mode |
-| **Ctrl+T** | Toggle model reasoning visibility (persists across sessions) |
-| **Tab** | Autocomplete file paths (`@` syntax), cycle `/resume` sessions |
-| **Ctrl+S** | Save MCP server configuration |
-| **?** | Display command reference |
+| **Esc** | 現在の操作を停止 / ツール許可を拒否 |
+| **Shift+Tab** | プランモード切り替え |
+| **Ctrl+T** | モデル推論の可視性を切り替え（セッション横断で永続） |
+| **Tab** | ファイルパス自動補完（`@` 構文）、`/resume` セッション循環 |
+| **Ctrl+S** | MCPサーバー設定を保存 |
+| **?** | コマンドリファレンス表示 |
 
-## Custom Instructions
+## カスタム指示
 
-Copilot CLI reads instruction files automatically:
+Copilot CLIは指示ファイルを自動的に読む:
 
-| File | Scope |
+| ファイル | スコープ |
 |------|-------|
-| `.github/copilot-instructions.md` | Repository-wide instructions |
-| `.github/instructions/**/*.instructions.md` | Path-specific (YAML frontmatter for glob patterns) |
-| `AGENTS.md` | Repository root (shared with Codex CLI) |
-| `CLAUDE.md` | Also read by Copilot coding agent |
+| `.github/copilot-instructions.md` | リポジトリ全体の指示 |
+| `.github/instructions/**/*.instructions.md` | パス固有（globパターン用YAMLフロントマター） |
+| `AGENTS.md` | リポジトリルート（Codex CLIと共有） |
+| `CLAUDE.md` | Copilotコーディングエージェントも読む |
 
-Instructions **combine** (all matching files included in prompt). No priority-based fallback.
+指示は**結合**（すべての一致ファイルがプロンプトに含まれる）。優先度ベースのフォールバックなし。
 
-## MCP Configuration
+## MCP設定
 
-- **Built-in**: GitHub MCP server (issues, PRs, Copilot Spaces) — pre-configured, enabled by default
-- **Config file**: `~/.copilot/mcp-config.json` (JSON format)
-- **Add server**: `/mcp add` in interactive mode, or `--additional-mcp-config <path>` per-session
-- **URL control**: `allowed_urls` / `denied_urls` patterns in `~/.copilot/config`
+- **組み込み**: GitHubMCPサーバー（issues、PR、Copilot Spaces） — 事前設定、デフォルトで有効
+- **設定ファイル**: `~/.copilot/mcp-config.json`（JSON形式）
+- **サーバー追加**: 対話モードで `/mcp add`、またはセッションごとに `--additional-mcp-config <path>`
+- **URL制御**: `~/.copilot/config` 内の `allowed_urls` / `denied_urls` パターン
 
-## Context Management
+## コンテキスト管理
 
-- **Auto-compaction**: Triggered at 95% token limit
-- **Manual compaction**: `/compact` command
-- **Token visualization**: `/context` shows detailed breakdown
-- **Session resume**: `--resume` (cycle sessions) or `--continue` (most recent local session)
+- **自動compaction**: トークン限界95%でトリガー
+- **手動compaction**: `/compact` コマンド
+- **トークン可視化**: `/context` が詳細な内訳を表示
+- **セッション再開**: `--resume`（セッション循環）または `--continue`（最新のローカルセッション）
 
-## Model Switching
+## モデル切り替え
 
-Available via `/model` command or `--model` flag:
-- Claude Sonnet 4.5 (default)
+`/model` コマンドまたは `--model` フラグで利用可能:
+- Claude Sonnet 4.5（デフォルト）
 - Claude Sonnet 4
 - GPT-5
 
-For Ashigaru: Model set at startup via settings.yaml. Runtime switching via `type: model_switch` available but rarely needed.
+足軽へ: モデルは起動時にsettings.yamlで設定。`type: model_switch` 経由のランタイム切り替え可能だが滅多に不要。
 
-## tmux Interaction
+## tmux対話
 
-**WARNING: Copilot CLI tmux integration is UNVERIFIED.**
+**警告: Copilot CLI tmux統合は未検証。**
 
-| Aspect | Status |
+| 側面 | ステータス |
 |--------|--------|
-| TUI in tmux pane | Expected to work (TUI-based) |
-| send-keys | **Untested** — TUI may use alt-screen |
-| capture-pane | **Untested** — alt-screen may interfere |
-| Prompt detection | Unknown prompt format (not `❯`) |
-| Non-interactive pipe | Unconfirmed (`copilot -p` undocumented) |
+| tmuxペイン内TUI | 動作する見込み（TUIベース） |
+| send-keys | **未テスト** — TUIがalt-screenを使用する可能性 |
+| capture-pane | **未テスト** — alt-screenが干渉する可能性 |
+| プロンプト検出 | 不明なプロンプトフォーマット（`❯` ではない） |
+| 非対話パイプ | 未確認（`copilot -p` 非文書化） |
 
-For the 将軍 system, tmux compatibility is a **high-risk area** requiring dedicated testing.
+将軍システムにとって、tmux互換性は専用テストを要する**高リスク領域**。
 
-### Potential Workarounds
-- `!` prefix for shell commands may bypass TUI input issues
-- `/delegate` to remote coding agent avoids local TUI interaction
-- Ctrl+C + restart as alternative to `/clear`
+### 潜在的回避策
+- `!` プレフィックスのシェルコマンドはTUI入力問題をバイパスする可能性
+- `/delegate` でリモートコーディングエージェントにすればローカルTUI対話を回避
+- `/clear` 代替としてCtrl+C + 再起動
 
-## Limitations (vs Claude Code)
+## 制限（vs Claude Code）
 
-| Feature | Claude Code | Copilot CLI |
+| 機能 | Claude Code | Copilot CLI |
 |---------|------------|-------------|
-| tmux integration | ✅ Battle-tested | ⚠️ Untested |
-| Non-interactive mode | ✅ `claude -p` | ⚠️ Unconfirmed |
-| `/clear` context reset | ✅ Available | ❌ None (use /compact or restart) |
-| Memory MCP | ✅ Persistent knowledge graph | ❌ No equivalent |
-| Cost model | API token-based (no limits) | Subscription (premium req limits) |
-| 8-agent parallel | ✅ Proven | ❌ Premium req limits prohibitive |
-| Dedicated file tools | ✅ Read/Write/Edit/Glob/Grep | General file tools with approval |
-| Web search | ✅ WebSearch + WebFetch | web_fetch only |
-| Task delegation | Task tool (local subagents) | /delegate (remote coding agent) |
+| tmux統合 | ✅ 実戦テスト済み | ⚠️ 未テスト |
+| 非対話モード | ✅ `claude -p` | ⚠️ 未確認 |
+| `/clear` コンテキストリセット | ✅ 利用可 | ❌ なし（/compactまたは再起動使用） |
+| Memory MCP | ✅ 永続的知識グラフ | ❌ 相当なし |
+| コストモデル | APIトークンベース（制限なし） | サブスクリプション（プレミアムreq制限） |
+| 8エージェント並列 | ✅ 実証済み | ❌ プレミアムreq制限が禁止的 |
+| 専用ファイルツール | ✅ Read/Write/Edit/Glob/Grep | 承認付き汎用ファイルツール |
+| Web検索 | ✅ WebSearch + WebFetch | web_fetchのみ |
+| タスク委任 | Taskツール（ローカルサブエージェント） | /delegate（リモートコーディングエージェント） |
 
-## Compaction Recovery
+## Compaction復旧
 
-Copilot CLI uses auto-compaction at 95% token limit. No `/clear` equivalent exists.
+Copilot CLIはトークン限界95%で自動compaction使用。`/clear` 相当は存在しない。
 
-For the 将軍 system, if Copilot CLI is integrated:
-1. Auto-compaction handles most cases automatically
-2. `/compact` can be sent via send-keys if tmux integration works
-3. Session state preserved through compaction (unlike `/clear` which resets)
-4. CLAUDE.md-based recovery not needed if context is preserved; use `AGENTS.md` + `.github/copilot-instructions.md` instead
+将軍システムにCopilot CLIを統合する場合:
+1. 自動compactionがほとんどのケースを自動処理
+2. tmux統合が動作するなら send-keys 経由で `/compact` を送信可能
+3. セッション状態はcompaction経由で保持（コンテキストをリセットする `/clear` と異なる）
+4. コンテキストが保持されるならCLAUDE.mdベースの復旧は不要; 代わりに `AGENTS.md` + `.github/copilot-instructions.md` を使用
 
-## Configuration Files Summary
+## 設定ファイルまとめ
 
-| File | Location | Purpose |
+| ファイル | 場所 | 目的 |
 |------|----------|---------|
-| `config` / `config.json` | `~/.copilot/` | Main configuration |
-| `mcp-config.json` | `~/.copilot/` | MCP server definitions |
-| `lsp-config.json` | `~/.copilot/` | LSP server configuration |
-| `.github/lsp.json` | Repo root | Repository-level LSP config |
+| `config` / `config.json` | `~/.copilot/` | メイン設定 |
+| `mcp-config.json` | `~/.copilot/` | MCPサーバー定義 |
+| `lsp-config.json` | `~/.copilot/` | LSPサーバー設定 |
+| `.github/lsp.json` | リポジトリルート | リポジトリレベルLSP設定 |
 
-Location customizable via `XDG_CONFIG_HOME` environment variable.
+場所は `XDG_CONFIG_HOME` 環境変数でカスタマイズ可能。
 
 ---
 
-*Sources: [GitHub Copilot CLI Docs](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/use-copilot-cli), [Copilot CLI Repository](https://github.com/github/copilot-cli), [Enhanced Agents Changelog (2026-01-14)](https://github.blog/changelog/2026-01-14-github-copilot-cli-enhanced-agents-context-management-and-new-ways-to-install/), [Plan Mode Changelog (2026-01-21)](https://github.blog/changelog/2026-01-21-github-copilot-cli-plan-before-you-build-steer-as-you-go/), [PR #10 (yuto-ts) Copilot対応](https://github.com/yohey-w/multi-agent-shogun/pull/10)*
+*情報源: [GitHub Copilot CLI Docs](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/use-copilot-cli)、[Copilot CLI Repository](https://github.com/github/copilot-cli)、[拡張エージェント変更ログ (2026-01-14)](https://github.blog/changelog/2026-01-14-github-copilot-cli-enhanced-agents-context-management-and-new-ways-to-install/)、[プランモード変更ログ (2026-01-21)](https://github.blog/changelog/2026-01-21-github-copilot-cli-plan-before-you-build-steer-as-you-go/)、[PR #10 (yuto-ts) Copilot対応](https://github.com/yohey-w/multi-agent-shogun/pull/10)*

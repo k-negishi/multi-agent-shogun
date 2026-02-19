@@ -1,26 +1,26 @@
 ---
 name: shogun-bloom-config
 description: >
-  Interactive wizard: guided questions with multiple-choice options about subscriptions,
-  then outputs a ready-to-paste capability_tiers YAML + fixed agent model assignments.
-  Trigger: "capability_tiers", "bloom config", "routing setup", "set up model routing",
+  対話形式ウィザード：サブスクリプションについての選択肢誘導型質問を行い、
+  ready-to-paste形式のcapability_tiers YAMLと固定エージェントモデル割り当てを出力する。
+  トリガー: "capability_tiers", "bloom config", "routing setup", "set up model routing",
   "ルーティング設定", "capability_tiers設定", "モデル設定", "サブスク設定", "model routing"
 ---
 
-# /shogun-bloom-config — Bloom Routing Wizard
+# /shogun-bloom-config — Bloom Routingウィザード
 
-## Overview
+## 概要
 
 選択肢誘導型インタビューで2問に答えるだけで、最適な `capability_tiers` 設定を
 ready-to-paste 形式で生成する。
 
-**Output:**
+**出力:**
 1. `capability_tiers` YAML → `config/settings.yaml` にそのまま貼り付け可
 2. `available_cost_groups` 宣言
 3. 固定エージェント推奨モデル（Karo / Gunshi）
 4. カバレッジギャップ警告（Bloom L6が対応不可の場合など）
 
-## When to Use
+## 使用タイミング
 
 - `config/settings.yaml` の初期セットアップ
 - サブスク追加・変更後の再設定
@@ -29,20 +29,20 @@ ready-to-paste 形式で生成する。
 
 ---
 
-## Instructions
+## 指示
 
-**IMPORTANT: Do NOT output the pattern tables directly. Always ask questions first using AskUserQuestion.**
+**重要: パターン表を直接出力しないでください。常にまず質問をAskUserQuestionで行ってください。**
 
-### Step 1: Q1 — Claude plan (AskUserQuestion)
+### ステップ1: Q1 — Claudeプラン (AskUserQuestion)
 
-Call AskUserQuestion with the following:
+AskUserQuestionを以下の内容で呼び出す:
 
 ```
 question: "Claudeのプランを教えてください。"
 header: "Claude Plan"
 options:
   - label: "Max 20x ($200/月)"
-    description: "Opus・Sonnet・Haiku全モデル利用可。20倍使用量。Spark Dual運用ならコレ (Recommended)"
+    description: "Opus・Sonnet・Haiku全モデル利用可。20倍使用量。Spark Dual運用ならコレ (推奨)"
   - label: "Max 5x ($100/月)"
     description: "同上、5倍使用量。コスト重視で十分な量なら。"
   - label: "Pro ($20/月)"
@@ -51,9 +51,9 @@ options:
     description: "SonnetとHaikuのみ（Opus不可）。L6タスクはギャップが発生する。"
 ```
 
-### Step 2: Q2 — ChatGPT plan (AskUserQuestion)
+### ステップ2: Q2 — ChatGPTプラン (AskUserQuestion)
 
-Call AskUserQuestion with the following:
+AskUserQuestionを以下の内容で呼び出す:
 
 ```
 question: "ChatGPT（OpenAI）のプランを教えてください。"
@@ -64,23 +64,23 @@ options:
   - label: "Plus ($20/月)"
     description: "gpt-5.3-codex利用可（Spark不可）。L4まで補完できる。"
   - label: "Pro ($200/月)"
-    description: "Spark(1000 tok/s, Terminal-Bench 58.4%) + gpt-5.3(77.3%)利用可。足軽7体の最強構成 (Recommended)"
+    description: "Spark(1000 tok/s, Terminal-Bench 58.4%) + gpt-5.3(77.3%)利用可。足軽7体の最強構成 (推奨)"
 ```
 
-### Step 2.5: Q3 — Rate limit preference (両方契約の場合のみ)
+### ステップ2.5: Q3 — レート制限優先度 (両方契約の場合のみ)
 
 **Q1=Pro/Max かつ Q2=Plus または Pro の場合のみ聞く。**
 両方のサブスクが使える場合、同じBloomレベルをどちらのクォータで処理するか確認する。
 
 #### Q3a: L3タスク（量産コード生成・テンプレート適用）の優先クォータ
 
-Call AskUserQuestion with:
+AskUserQuestionで以下を呼び出す:
 
 ```
 question: "L1-L3タスク（量産・テンプレート・簡単な実装）はどちらのクォータを優先しますか？"
 header: "L3クォータ優先"
 options:
-  - label: "ChatGPT Pro (Spark / gpt-5.3) 優先 (Recommended)"
+  - label: "ChatGPT Pro (Spark / gpt-5.3) 優先 (推奨)"
     description: "Spark 1000 tok/s で爆速処理。Claude Max枠を温存してL5-L6に集中。"
   - label: "Claude Max (Haiku 4.5) 優先"
     description: "Claude枠を均等利用。ChatGPT Pro枠を節約してL4に余裕を持たせる。"
@@ -88,13 +88,13 @@ options:
 
 #### Q3b: L4タスク（分析・コードレビュー・デバッグ）の優先クォータ — Q2=Pro の場合のみ
 
-Call AskUserQuestion with:
+AskUserQuestionで以下を呼び出す:
 
 ```
 question: "L4タスク（分析・デバッグ・コードレビュー）はどちらのクォータを優先しますか？"
 header: "L4クォータ優先"
 options:
-  - label: "ChatGPT Pro (gpt-5.3-codex) 優先 (Recommended)"
+  - label: "ChatGPT Pro (gpt-5.3-codex) 優先 (推奨)"
     description: "Terminal-Bench 77.3%。Codex Pro枠を活用してClaude枠を温存。"
   - label: "Claude Max (Sonnet 4.6) 優先"
     description: "SWE-bench 79.6%。Claude品質でL4も処理。ChatGPT Pro枠をSparkに集中。"
@@ -102,9 +102,9 @@ options:
 
 これらの回答に応じて capability_tiers の max_bloom 値を調整する（下記パターンのカスタム節を参照）。
 
-### Step 3: Map answers to pattern
+### ステップ3: 回答をパターンにマッピング
 
-| Claude | ChatGPT | Pattern |
+| Claude | ChatGPT | パターン |
 |--------|---------|---------|
 | なし/Free | なし | A-Free |
 | Pro/Max | なし | A |
@@ -113,9 +113,9 @@ options:
 | Pro/Max | Plus | D |
 | Pro/Max | Pro | **E (Full Power)** |
 
-### Step 4: Output the matching pattern below
+### ステップ4: マッチするパターンを出力
 
-Output ONLY the matching pattern. Show:
+マッチするパターンのみ出力する。以下を表示:
 1. 簡単な説明（なぜこの設定か）
 2. `capability_tiers` YAML（コピー可能なコードブロック）
 3. `available_cost_groups`
@@ -457,7 +457,7 @@ capability_tiers:
 
 ---
 
-## Step 5: 設定の適用手順
+## ステップ5: 設定の適用手順
 
 出力したYAMLの後に、以下の適用手順を必ず案内する:
 
@@ -503,7 +503,7 @@ source lib/cli_adapter.sh && validate_subscription_coverage
 
 ---
 
-## Quick Decision Tree
+## クイック判断ツリー
 
 ```
 Claude Pro以上を契約している?

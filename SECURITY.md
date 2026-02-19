@@ -1,307 +1,307 @@
-# Security Policy
+# セキュリティポリシー
 
-## Supported Versions
+## サポートされるバージョン
 
-multi-agent-shogun is currently in active development. Security updates are provided for the latest release on the `main` branch.
+multi-agent-shogunは現在活発に開発中です。セキュリティアップデートは`main`ブランチの最新リリースに提供されます。
 
-| Version | Supported          |
+| バージョン | サポート状況          |
 | ------- | ------------------ |
 | main    | :white_check_mark: |
 | < 3.0   | :x:                |
 
-We recommend always using the latest version from the `main` branch.
+常に`main`ブランチの最新バージョンを使用することを推奨します。
 
 ---
 
-## Security Considerations
+## セキュリティ上の考慮事項
 
-### 1. Whitelist-Based .gitignore
+### 1. ホワイトリストベースの.gitignore
 
-This project uses a **whitelist-based .gitignore** strategy to prevent accidental commits of sensitive data:
+このプロジェクトは**ホワイトリストベースの.gitignore**戦略を使用して、機密データの誤コミットを防ぎます:
 
-- Default `*` excludes everything
-- Only explicitly allowed files are tracked
-- `projects/`, `queue/`, and `memory/` are intentionally excluded
+- デフォルトの `*` がすべてを除外
+- 明示的に許可されたファイルのみが追跡される
+- `projects/`、`queue/`、`memory/` は意図的に除外されている
 
-**Always verify what you're committing**:
+**コミット内容を常に確認してください**:
 ```bash
 git status
 git diff --cached
 ```
 
-### 2. API Keys and Tokens
+### 2. APIキーとトークン
 
-**NEVER commit API keys, tokens, or credentials to the repository.**
+**APIキー、トークン、認証情報をリポジトリにコミットしないでください。**
 
-Sensitive data should be stored in:
-- Environment variables (e.g., `GITHUB_PERSONAL_ACCESS_TOKEN`)
-- `config/settings.yaml` (which is git-ignored for secrets)
-- `.env` files (not tracked by git)
+機密データは以下に保存すべきです:
+- 環境変数（例: `GITHUB_PERSONAL_ACCESS_TOKEN`）
+- `config/settings.yaml`（機密情報用にgit-ignored）
+- `.env` ファイル（gitで追跡されない）
 
-**MCP Server Configuration**: When adding MCP servers with credentials:
+**MCPサーバー設定**: 認証情報を含むMCPサーバーを追加する場合:
 ```bash
-# Good: Use environment variables
+# 良い: 環境変数を使用
 claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=ghp_your_token -- npx -y @modelcontextprotocol/server-github
 
-# Bad: Hardcoding tokens
+# 悪い: トークンをハードコード
 claude mcp add github -e GITHUB_PERSONAL_ACCESS_TOKEN=ghp_1234567890abcdef -- npx -y @modelcontextprotocol/server-github
 ```
 
-### 3. ntfy Topic Security
+### 3. ntfyトピックセキュリティ
 
-Your **ntfy topic name is your password**. Anyone who knows your topic can:
-- Read your notifications
-- Send commands to your Shogun
+あなたの**ntfyトピック名はパスワードです**。トピックを知っている人は誰でも:
+- 通知を読める
+- 将軍にコマンドを送信できる
 
-**Best practices**:
-- Use a hard-to-guess topic name (e.g., `shogun-random-string-12345`, not `shogun` or `my-tasks`)
-- Never share your topic in screenshots, blog posts, or GitHub commits
-- Keep `config/settings.yaml` (which contains your topic) excluded from git
+**ベストプラクティス**:
+- 推測困難なトピック名を使用（例: `shogun-random-string-12345`、`shogun` や `my-tasks` ではなく）
+- スクリーンショット、ブログ投稿、GitHubコミットでトピックを共有しない
+- `config/settings.yaml`（トピックを含む）をgitから除外する
 
-**Example of a secure topic**:
+**安全なトピックの例**:
 ```yaml
 # config/settings.yaml (git-ignored)
-ntfy_topic: "your-random-topic-name-here"  # Random, hard to guess
+ntfy_topic: "your-random-topic-name-here"  # ランダムで推測困難
 ```
 
-### 4. Project Data Privacy
+### 4. プロジェクトデータのプライバシー
 
-The `projects/` directory is excluded from git by design:
-- Contains confidential client information
-- Includes contracts, invoices, and business details
-- Should NEVER be committed to version control
+`projects/` ディレクトリは設計上gitから除外されています:
+- 機密のクライアント情報を含む
+- 契約書、請求書、ビジネス詳細を含む
+- バージョン管理にコミットすべきではない
 
-**If you need to share project structure examples**, create sanitized templates in `templates/` instead.
+**プロジェクト構造の例を共有する必要がある場合**、代わりに `templates/` にサニタイズされたテンプレートを作成してください。
 
-### 5. Memory MCP Data
+### 5. Memory MCPデータ
 
-The `memory/` directory contains user-specific persistent memory:
-- Personal preferences
-- Project history
-- Learned patterns
+`memory/` ディレクトリにはユーザー固有の永続メモリが含まれます:
+- 個人設定
+- プロジェクト履歴
+- 学習パターン
 
-This data is **excluded from git** to protect user privacy. Never commit `memory/*.jsonl` files.
+このデータはユーザープライバシー保護のため**gitから除外**されています。`memory/*.jsonl` ファイルをコミットしないでください。
 
-### 6. Shell Script Injection
+### 6. シェルスクリプトインジェクション
 
-When contributing shell scripts, be aware of injection risks:
+シェルスクリプトを貢献する際、インジェクションリスクに注意してください:
 
-**Unsafe**:
+**安全でない**:
 ```bash
-# DO NOT use eval or unquoted variables
-eval "$USER_INPUT"  # Injection risk!
-echo $VARIABLE      # Word splitting risk!
+# evalやクォートされていない変数を使用しない
+eval "$USER_INPUT"  # インジェクションリスク！
+echo $VARIABLE      # 単語分割リスク！
 ```
 
-**Safe**:
+**安全**:
 ```bash
-# Always quote variables
+# 常に変数をクォート
 echo "$VARIABLE"
 
-# Use arrays for commands
+# コマンドに配列を使用
 cmd=("git" "commit" "-m" "$MESSAGE")
 "${cmd[@]}"
 ```
 
-All scripts must pass `shellcheck` to catch common security issues.
+すべてのスクリプトは一般的なセキュリティ問題を検出するため `shellcheck` に合格する必要があります。
 
-### 7. tmux Session Security
+### 7. tmuxセッションセキュリティ
 
-tmux sessions run locally and are accessible to anyone with access to your machine:
-- Do not run multi-agent-shogun on shared/untrusted systems
-- Be aware that tmux sessions persist after logout (unless explicitly killed)
-- Use `tmux kill-session -t shogun` to clean up after use
+tmuxセッションはローカルで実行され、マシンへのアクセス権を持つ誰でもアクセス可能です:
+- 共有/信頼されていないシステムでmulti-agent-shogunを実行しない
+- tmuxセッションはログアウト後も持続することに注意（明示的にkillされない限り）
+- 使用後は `tmux kill-session -t shogun` でクリーンアップ
 
 ---
 
-## Reporting a Vulnerability
+## 脆弱性の報告
 
-**We take security vulnerabilities seriously.** If you discover a security issue, please report it responsibly.
+**セキュリティ脆弱性を真剣に受け止めています。** セキュリティ問題を発見した場合、責任を持って報告してください。
 
-### How to Report
+### 報告方法
 
-1. **Do NOT open a public GitHub issue** for security vulnerabilities
-2. **Use GitHub Security Advisories** (recommended):
-   - Navigate to the [Security tab](https://github.com/yohey-w/multi-agent-shogun/security)
-   - Click "Report a vulnerability"
-   - Provide detailed information (see below)
+1. セキュリティ脆弱性について**公開GitHubイシューを開かない**
+2. **GitHub Security Advisoriesを使用**（推奨）:
+   - [Securityタブ](https://github.com/yohey-w/multi-agent-shogun/security)に移動
+   - "Report a vulnerability"をクリック
+   - 詳細情報を提供（下記参照）
 
-3. **Or email the maintainer** (if GitHub Security Advisories is unavailable):
-   - Email: See GitHub profile for contact information
-   - Subject: `[SECURITY] multi-agent-shogun vulnerability report`
+3. **またはメンテナーにメール**（GitHub Security Advisoriesが利用できない場合）:
+   - メール: 連絡先情報についてはGitHubプロフィールを参照
+   - 件名: `[SECURITY] multi-agent-shogun vulnerability report`
 
-### What to Include
+### 含めるべき内容
 
-When reporting a vulnerability, please include:
+脆弱性を報告する際、以下を含めてください:
 
-- **Description**: Clear summary of the vulnerability
-- **Impact**: What could an attacker do with this vulnerability?
-- **Steps to Reproduce**: Detailed steps to reproduce the issue
-- **Environment**: OS, shell version, Claude Code version, etc.
-- **Proof of Concept**: Code or screenshots demonstrating the issue (if applicable)
-- **Suggested Fix**: If you have ideas for how to fix it (optional)
+- **説明**: 脆弱性の明確な概要
+- **影響**: 攻撃者はこの脆弱性で何ができるか？
+- **再現手順**: 問題を再現するための詳細な手順
+- **環境**: OS、シェルバージョン、Claude Codeバージョンなど
+- **概念実証**: 問題を実証するコードまたはスクリーンショット（該当する場合）
+- **修正案**: 修正方法のアイデアがあれば（オプション）
 
-**Example Report**:
+**報告例**:
 ```
-Title: Shell injection in inbox_write.sh via unsanitized message content
+タイトル: inbox_write.shでサニタイズされていないメッセージコンテンツによるシェルインジェクション
 
-Description:
-The inbox_write.sh script does not sanitize user input before writing
-to YAML files, allowing command injection through crafted messages.
+説明:
+inbox_write.shスクリプトはYAMLファイルへの書き込み前にユーザー入力を
+サニタイズしないため、細工されたメッセージによるコマンドインジェクションを許す。
 
-Impact:
-An attacker could send a malicious message via ntfy that executes
-arbitrary commands on the host system.
+影響:
+攻撃者はホストシステム上で任意のコマンドを実行する悪意のある
+メッセージをntfy経由で送信できる。
 
-Steps to Reproduce:
-1. Send the following ntfy message: `$(rm -rf /)`
-2. inbox_listener.sh receives and writes to ntfy_inbox.yaml
-3. Shogun reads the YAML file and executes the embedded command
+再現手順:
+1. 次のntfyメッセージを送信: `$(rm -rf /)`
+2. inbox_listener.shが受信してntfy_inbox.yamlに書き込む
+3. 将軍がYAMLファイルを読み、埋め込まれたコマンドを実行
 
-Environment:
+環境:
 - OS: WSL2 Ubuntu 22.04
 - Claude Code: 1.2.3
 - Bash: 5.1.16
 
-Proof of Concept:
-[Attach screenshot or code snippet]
+概念実証:
+[スクリーンショットまたはコードスニペットを添付]
 
-Suggested Fix:
-Sanitize input by escaping special characters before writing to YAML,
-or use a proper YAML library instead of raw string concatenation.
+修正案:
+YAMLへの書き込み前に特殊文字をエスケープして入力をサニタイズ、
+または生の文字列連結の代わりに適切なYAMLライブラリを使用。
 ```
 
 ---
 
-## Response Timeline
+## 対応タイムライン
 
-We aim to respond to security reports within:
+セキュリティ報告への対応を以下のタイムラインで目指します:
 
-- **Initial response**: 48 hours
-- **Triage and assessment**: 1 week
-- **Fix development**: Depends on severity
-  - Critical: 1-2 weeks
-  - High: 2-4 weeks
-  - Medium: 4-8 weeks
-  - Low: Best effort
+- **初期対応**: 48時間
+- **トリアージと評価**: 1週間
+- **修正開発**: 深刻度による
+  - クリティカル: 1-2週間
+  - 高: 2-4週間
+  - 中: 4-8週間
+  - 低: ベストエフォート
 
-**Note**: These are target timelines. Actual response may vary based on maintainer availability and issue complexity.
+**注意**: これらは目標タイムラインです。実際の対応はメンテナーの可用性と問題の複雑さによって異なる場合があります。
 
-### Severity Levels
+### 深刻度レベル
 
-| Severity | Description | Example |
+| 深刻度 | 説明 | 例 |
 |----------|-------------|---------|
-| **Critical** | Remote code execution, data breach | Shell injection via ntfy messages |
-| **High** | Privilege escalation, credential exposure | API keys leaked in logs |
-| **Medium** | Information disclosure, DoS | Sensitive data in error messages |
-| **Low** | Minor information leak | Version disclosure |
+| **クリティカル** | リモートコード実行、データ漏洩 | ntfyメッセージ経由のシェルインジェクション |
+| **高** | 権限昇格、認証情報の露出 | ログでAPIキーが漏洩 |
+| **中** | 情報開示、DoS | エラーメッセージでの機密データ |
+| **低** | 軽微な情報漏洩 | バージョン開示 |
 
 ---
 
-## Security Updates
+## セキュリティアップデート
 
-Security fixes will be:
-1. Developed in a private branch
-2. Tested thoroughly
-3. Released with a security advisory
-4. Announced in the project README and GitHub Releases
+セキュリティ修正は以下のように行われます:
+1. プライベートブランチで開発
+2. 徹底的にテスト
+3. セキュリティアドバイザリとともにリリース
+4. プロジェクトREADMEとGitHub Releasesで発表
 
-**Critical vulnerabilities** may result in an emergency release outside the normal release cycle.
-
----
-
-## Scope
-
-### In Scope
-
-The following are considered in scope for security reports:
-
-- **Shell scripts** in `scripts/`, `lib/`, and root directory
-- **YAML parsing** and file handling in queue system
-- **ntfy integration** (message handling, authentication)
-- **tmux integration** (command injection, session hijacking)
-- **MCP server configuration** (credential exposure)
-- **File permissions** and access control issues
-- **Dependency vulnerabilities** in npm packages used by MCP servers
-
-### Out of Scope
-
-The following are NOT considered security vulnerabilities:
-
-- **Features working as designed**: For example, ntfy topic name being "public" is a documented limitation, not a vulnerability
-- **Third-party services**: Issues in ntfy.sh, Claude Code CLI, or MCP servers themselves (report those upstream)
-- **Local access**: An attacker with local shell access can already do anything
-- **Denial of Service via resource exhaustion**: For example, spawning 1000 agents to consume memory
-- **Social engineering**: Tricking users into running malicious commands
-- **Issues requiring physical access** to the machine
+**クリティカル脆弱性**は通常のリリースサイクル外での緊急リリースとなる場合があります。
 
 ---
 
-## Security Best Practices for Users
+## 範囲
 
-To keep your multi-agent-shogun installation secure:
+### 範囲内
 
-1. **Keep dependencies updated**:
+以下はセキュリティ報告の範囲内とみなされます:
+
+- `scripts/`、`lib/`、ルートディレクトリの**シェルスクリプト**
+- キューシステムでの**YAML解析**とファイルハンドリング
+- **ntfy統合**（メッセージハンドリング、認証）
+- **tmux統合**（コマンドインジェクション、セッションハイジャック）
+- **MCPサーバー設定**（認証情報露出）
+- **ファイルパーミッション**とアクセス制御の問題
+- MCPサーバーで使用されるnpmパッケージの**依存関係脆弱性**
+
+### 範囲外
+
+以下はセキュリティ脆弱性とは**みなされません**:
+
+- **設計通りに機能する機能**: たとえば、ntfyトピック名が「公開」であることは文書化された制限であり、脆弱性ではない
+- **サードパーティサービス**: ntfy.sh、Claude Code CLI、MCPサーバー自体の問題（それらは上流に報告）
+- **ローカルアクセス**: ローカルシェルアクセス権を持つ攻撃者はすでに何でもできる
+- **リソース枯渇によるDoS**: たとえば、メモリを消費するために1000のエージェントを起動
+- **ソーシャルエンジニアリング**: ユーザーを騙して悪意のあるコマンドを実行させる
+- マシンへの**物理アクセスを必要とする問題**
+
+---
+
+## ユーザー向けセキュリティベストプラクティス
+
+multi-agent-shogunインストールを安全に保つために:
+
+1. **依存関係を最新に保つ**:
    ```bash
-   # Update Claude Code CLI
+   # Claude Code CLIを更新
    curl -fsSL https://claude.ai/install.sh | bash
 
-   # Update MCP servers
+   # MCPサーバーを更新
    claude mcp list
-   # Re-run install commands for outdated servers
+   # 古いサーバーのインストールコマンドを再実行
    ```
 
-2. **Use strong ntfy topics**:
+2. **強力なntfyトピックを使用**:
    ```bash
-   # Generate a random topic
+   # ランダムなトピックを生成
    echo "shogun-$(openssl rand -hex 8)"
    ```
 
-3. **Review scripts before running**:
+3. **実行前にスクリプトをレビュー**:
    ```bash
-   # Always check what a script does before running it
+   # スクリプトが何をするか常に確認してから実行
    cat shutsujin_departure.sh
    ```
 
-4. **Limit tmux session access**:
+4. **tmuxセッションアクセスを制限**:
    ```bash
-   # Set restrictive file permissions
+   # 制限的なファイルパーミッションを設定
    chmod 700 ~/.tmux.conf
    ```
 
-5. **Monitor logs for suspicious activity**:
+5. **不審なアクティビティをログで監視**:
    ```bash
-   # Check logs directory
+   # logsディレクトリを確認
    ls -lah logs/
    ```
 
-6. **Verify .gitignore before committing**:
+6. **コミット前に.gitignoreを確認**:
    ```bash
-   # Always check what you're about to commit
+   # コミットしようとしている内容を常に確認
    git status
    git diff --cached
    ```
 
 ---
 
-## Acknowledgments
+## 謝辞
 
-We appreciate the security research community's efforts to keep open-source software secure. Security researchers who responsibly disclose vulnerabilities will be acknowledged in:
+オープンソースソフトウェアを安全に保つセキュリティ研究コミュニティの努力に感謝します。責任を持って脆弱性を開示したセキュリティ研究者は以下で認識されます:
 
-- The security advisory
-- The project README (if desired)
-- GitHub Security Advisories hall of fame
-
----
-
-## Contact
-
-For security-related questions (not vulnerability reports):
-- Open a [GitHub Discussion](https://github.com/yohey-w/multi-agent-shogun/discussions)
-- Tag your question with `security` label
-
-For vulnerability reports, use the process described in [Reporting a Vulnerability](#reporting-a-vulnerability).
+- セキュリティアドバイザリ
+- プロジェクトREADME（希望する場合）
+- GitHub Security Advisories殿堂
 
 ---
 
-**Thank you for helping keep multi-agent-shogun secure!**
+## 連絡先
+
+セキュリティ関連の質問（脆弱性報告ではない）:
+- [GitHub Discussion](https://github.com/yohey-w/multi-agent-shogun/discussions)を開く
+- 質問に `security` ラベルをタグ付け
+
+脆弱性報告については、[脆弱性の報告](#脆弱性の報告)で説明されたプロセスを使用してください。
+
+---
+
+**multi-agent-shogunを安全に保つためのご協力に感謝します！**

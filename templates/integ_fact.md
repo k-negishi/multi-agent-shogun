@@ -1,48 +1,47 @@
-# Template: Fact Integration (TMPL-INTEG-FACT)
+# テンプレート: 事実統合（TMPL-INTEG-FACT）
 
-> **Use when**: Integrating reports that contain factual claims about real-world entities,
-> people, systems, or events. Highest contradiction risk.
+> **使用タイミング**: 現実世界のエンティティ、人、システム、またはイベントに関する事実主張を含む報告を統合する場合。最高の矛盾リスク。
 
-## Pre-Integration Checklist
+## 統合前チェックリスト
 
-- [ ] Extract ALL factual claims from each input report
-- [ ] Create a fact comparison table (Input A vs Input B vs ...)
-- [ ] Flag any mismatches (especially "exists" vs "doesn't exist")
-- [ ] Consult primary sources for each flagged mismatch
-- [ ] Resolve each contradiction with source citation
+- [ ] 各入力報告からすべての事実主張を抽出
+- [ ] 事実比較表を作成（入力A vs 入力B vs ...）
+- [ ] 任意の不一致にフラグ（特に「存在する」 vs 「存在しない」）
+- [ ] フラグ付き不一致ごとにプライマリソースを参照
+- [ ] ソース引用と共に各矛盾を解決
 
-## Fact Extraction Template
+## 事実抽出テンプレート
 
-For each input report, list:
+各入力報告について、リスト化:
 
 ```
-Report: [filename]
-Facts:
-  1. [Entity] — [Claim] — [Source line/section]
-  2. [Entity] — [Claim] — [Source line/section]
+報告: [ファイル名]
+事実:
+  1. [エンティティ] — [主張] — [ソース行/セクション]
+  2. [エンティティ] — [主張] — [ソース行/セクション]
   ...
 ```
 
-## Cross-Reference Matrix
+## クロスリファレンスマトリックス
 
-| Entity/Topic | Report A | Report B | Report C | Conflict? | Resolution |
+| エンティティ/トピック | 報告A | 報告B | 報告C | 矛盾？ | 解決 |
 |-------------|----------|----------|----------|-----------|------------|
 | ... | ... | ... | ... | YES/NO | ... |
 
-## Contradiction Resolution Section (Required in Output)
+## 矛盾解決セクション（出力に必須）
 
 ```markdown
-## Contradiction Resolution
+## 矛盾解決
 
-### [Topic]: [Report A claim] vs [Report B claim]
-- **Primary source check**: [what was found]
-- **Adopted position**: [which is correct and why]
-- **Impact on recommendations**: [how this changes the integrated output]
+### [トピック]: [報告A主張] vs [報告B主張]
+- **プライマリソース確認**: [見つかったもの]
+- **採用された立場**: [どれが正しくその理由]
+- **推奨への影響**: [これが統合出力をどう変えるか]
 ```
 
-## Critic Review (Recommended for Fact Integration)
+## 批評レビュー（事実統合に推奨）
 
-If available, request a second agent to review the integrated output specifically for:
-- Undetected contradictions
-- Logical inconsistencies in the merged narrative
-- Facts cited without source verification
+可能であれば、統合出力を第二エージェントにレビュー依頼、特に以下を:
+- 未検出の矛盾
+- マージされたナラティブ内の論理的不一致
+- ソース検証なしで引用された事実

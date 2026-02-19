@@ -1,304 +1,304 @@
-# Contributing to multi-agent-shogun
+# multi-agent-shogun への貢献
 
-Thank you for your interest in contributing to multi-agent-shogun! This document provides guidelines for contributing to the project.
+multi-agent-shogun への貢献に興味を持っていただき、ありがとうございます！このドキュメントはプロジェクトへの貢献ガイドラインを提供します。
 
-## Table of Contents
+## 目次
 
-1. [How to Contribute](#how-to-contribute)
-2. [Project Structure](#project-structure)
-3. [.gitignore Whitelist Approach](#gitignore-whitelist-approach)
-4. [Coding Conventions](#coding-conventions)
-5. [Testing](#testing)
-6. [Pull Request Guidelines](#pull-request-guidelines)
-7. [Communication](#communication)
+1. [貢献方法](#貢献方法)
+2. [プロジェクト構造](#プロジェクト構造)
+3. [.gitignore ホワイトリストアプローチ](#gitignore-ホワイトリストアプローチ)
+4. [コーディング規約](#コーディング規約)
+5. [テスト](#テスト)
+6. [プルリクエストガイドライン](#プルリクエストガイドライン)
+7. [コミュニケーション](#コミュニケーション)
 
 ---
 
-## How to Contribute
+## 貢献方法
 
-### Fork, Branch, PR Workflow
+### Fork、Branch、PR ワークフロー
 
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally:
+1. **リポジトリをForkする** on GitHub
+2. **Forkをローカルにクローン**:
    ```bash
    git clone https://github.com/YOUR_USERNAME/multi-agent-shogun.git
    cd multi-agent-shogun
    ```
-3. **Create a feature branch**:
+3. **機能ブランチを作成**:
    ```bash
    git checkout -b feature/your-feature-name
    ```
-4. **Make your changes** and commit them with clear, descriptive messages
-5. **Push to your fork**:
+4. **変更を加えてコミット**（明確で説明的なメッセージで）
+5. **Forkにプッシュ**:
    ```bash
    git push origin feature/your-feature-name
    ```
-6. **Open a Pull Request** on GitHub
+6. **プルリクエストを開く** on GitHub
 
-### Before You Start
+### 開始前に
 
-- Check existing [Issues](https://github.com/yohey-w/multi-agent-shogun/issues) to avoid duplicate work
-- For major changes, open a [Discussion](https://github.com/yohey-w/multi-agent-shogun/discussions) first
-- Read this entire document to understand our conventions and requirements
+- 重複作業を避けるため、既存の[Issues](https://github.com/yohey-w/multi-agent-shogun/issues)を確認
+- 大きな変更の場合、まず[Discussion](https://github.com/yohey-w/multi-agent-shogun/discussions)を開く
+- 規約と要件を理解するため、このドキュメント全体を読む
 
 ---
 
-## Project Structure
+## プロジェクト構造
 
-Understanding the directory layout will help you navigate the codebase:
+ディレクトリレイアウトを理解すると、コードベースをナビゲートしやすくなります:
 
 ```
 multi-agent-shogun/
 │
-├── scripts/              # Core utility scripts
-│   ├── inbox_write.sh    # Agent-to-agent messaging (file-based mailbox)
-│   ├── inbox_watcher.sh  # Event-driven delivery via inotifywait
-│   ├── ntfy.sh           # Push notifications to phone
-│   └── build_instructions.sh  # Generate CLI-specific instructions
+├── scripts/              # コアユーティリティスクリプト
+│   ├── inbox_write.sh    # エージェント間メッセージング（ファイルベースメールボックス）
+│   ├── inbox_watcher.sh  # inotifywaitによるイベント駆動配信
+│   ├── ntfy.sh           # スマホへのプッシュ通知
+│   └── build_instructions.sh  # CLI固有の指示を生成
 │
-├── instructions/         # Agent behavior definitions
-│   ├── shogun.md         # Shogun (commander) instructions
-│   ├── karo.md           # Karo (manager) instructions
-│   ├── ashigaru.md       # Ashigaru (worker) instructions
-│   ├── cli_specific/     # CLI-specific tool descriptions
+├── instructions/         # エージェント動作定義
+│   ├── shogun.md         # 将軍（指揮官）の指示
+│   ├── karo.md           # 家老（マネージャー）の指示
+│   ├── ashigaru.md       # 足軽（ワーカー）の指示
+│   ├── cli_specific/     # CLI固有のツール説明
 │   │   ├── claude_tools.md
 │   │   ├── codex_tools.md
 │   │   └── copilot_tools.md
-│   └── generated/        # Built from templates (do not edit manually)
+│   └── generated/        # テンプレートからビルド（手動編集禁止）
 │
-├── lib/                  # Core libraries
-│   └── cli_adapter.sh    # Multi-CLI abstraction layer
+├── lib/                  # コアライブラリ
+│   └── cli_adapter.sh    # マルチCLI抽象化レイヤー
 │
-├── templates/            # Report and context templates
-│   ├── context_template.md  # Universal 7-section project context
-│   └── integ_*.md        # Integration report templates
+├── templates/            # 報告とコンテキストテンプレート
+│   ├── context_template.md  # 汎用7セクションプロジェクトコンテキスト
+│   └── integ_*.md        # 統合報告テンプレート
 │
-├── queue/                # Communication and task data
-│   ├── shogun_to_karo.yaml  # Command queue
-│   ├── inbox/            # Per-agent mailboxes
-│   ├── tasks/            # Per-worker task assignments
-│   └── reports/          # Completion reports
+├── queue/                # 通信とタスクデータ
+│   ├── shogun_to_karo.yaml  # コマンドキュー
+│   ├── inbox/            # エージェントごとのメールボックス
+│   ├── tasks/            # ワーカーごとのタスク割当
+│   └── reports/          # 完了報告
 │
-├── config/               # Configuration files
-│   ├── settings.yaml     # Language, CLI settings, ntfy topic
-│   └── projects.yaml     # Project registry
+├── config/               # 設定ファイル
+│   ├── settings.yaml     # 言語、CLI設定、ntfyトピック
+│   └── projects.yaml     # プロジェクトレジストリ
 │
-├── tests/                # Test suite
-│   ├── unit/             # bats unit tests
-│   └── integration/      # bats integration tests
+├── tests/                # テストスイート
+│   ├── unit/             # bats ユニットテスト
+│   └── integration/      # bats 統合テスト
 │
-├── docs/                 # Documentation
-│   └── philosophy.md     # Design principles
+├── docs/                 # ドキュメント
+│   └── philosophy.md     # 設計原則
 │
 ├── .github/
-│   └── workflows/        # CI/CD pipelines
-│       └── test.yml      # GitHub Actions test suite
+│   └── workflows/        # CI/CDパイプライン
+│       └── test.yml      # GitHub Actions テストスイート
 │
-├── shutsujin_departure.sh  # Daily deployment script
-├── first_setup.sh          # First-time setup
-├── CLAUDE.md               # Core system instructions (auto-loaded)
-├── AGENTS.md               # Codex auto-load file
-└── Makefile                # Development commands
+├── shutsujin_departure.sh  # 日次デプロイスクリプト
+├── first_setup.sh          # 初回セットアップ
+├── CLAUDE.md               # コアシステム指示（自動ロード）
+├── AGENTS.md               # Codex 自動ロードファイル
+└── Makefile                # 開発コマンド
 ```
 
-### Key Directories
+### 主要ディレクトリ
 
-| Directory | Purpose | Important Notes |
+| ディレクトリ | 目的 | 重要な注意事項 |
 |-----------|---------|-----------------|
-| `scripts/` | Core system utilities | All scripts must pass shellcheck |
-| `instructions/` | Agent behavior | CLI-specific instructions go in `cli_specific/` |
-| `lib/` | Shared libraries | `cli_adapter.sh` handles CLI abstraction |
-| `queue/` | Runtime data | Git-ignored, generated at runtime |
-| `templates/` | Reusable templates | Used for reports and context files |
-| `tests/` | Test suite | bats format, organized by level (unit/integration) |
+| `scripts/` | コアシステムユーティリティ | すべてのスクリプトはshellcheckに合格すること |
+| `instructions/` | エージェント動作 | CLI固有の指示は `cli_specific/` に配置 |
+| `lib/` | 共有ライブラリ | `cli_adapter.sh` がCLI抽象化を処理 |
+| `queue/` | ランタイムデータ | git-ignored、実行時に生成 |
+| `templates/` | 再利用可能テンプレート | 報告とコンテキストファイルに使用 |
+| `tests/` | テストスイート | bats形式、レベル別に整理（unit/integration） |
 
 ---
 
-## .gitignore Whitelist Approach
+## .gitignore ホワイトリストアプローチ
 
-**CRITICAL:** This project uses a **whitelist-based .gitignore** strategy.
+**重要:** このプロジェクトは**ホワイトリストベースの.gitignore**戦略を使用しています。
 
-### How It Works
+### 仕組み
 
-1. **Step 1**: Default `*` excludes everything from git
-2. **Step 2**: `!*/` allows directory traversal
-3. **Step 3**: Individual files and directories are explicitly allowed with `!filename`
+1. **Step 1**: デフォルトの `*` がすべてをgitから除外
+2. **Step 2**: `!*/` がディレクトリトラバーサルを許可
+3. **Step 3**: 個別のファイルとディレクトリを `!filename` で明示的に許可
 
-### Adding New Files to Git
+### 新しいファイルをGitに追加する
 
-**Before adding a new file to git, you MUST add it to the .gitignore whitelist:**
+**新しいファイルをgitに追加する前に、.gitignoreホワイトリストに追加する必要があります:**
 
 ```bash
-# Example: Adding a new script to git
+# 例: 新しいスクリプトをgitに追加
 
-# 1. Create your file
+# 1. ファイルを作成
 touch scripts/new_script.sh
 
-# 2. Edit .gitignore and add the whitelist entry
+# 2. .gitignoreを編集してホワイトリストエントリを追加
 echo '!scripts/new_script.sh' >> .gitignore
 
-# 3. Now git will track it
+# 3. これでgitが追跡します
 git add scripts/new_script.sh
 git commit -m "feat: add new_script.sh"
 ```
 
-### What Gets Excluded by Default
+### デフォルトで除外されるもの
 
-The following are intentionally excluded (do NOT whitelist these):
+以下は意図的に除外されています（これらはホワイトリストに追加しないでください）:
 
-- `projects/` — Contains confidential client information
-- `queue/` — Runtime data, generated dynamically
-- `memory/` — User-specific persistent memory
-- `.claude/commands/` — User-specific skills (not committed)
-- `saytask/streaks.yaml` — User-specific task data
+- `projects/` — 機密のクライアント情報を含む
+- `queue/` — ランタイムデータ、動的に生成
+- `memory/` — ユーザー固有の永続メモリ
+- `.claude/commands/` — ユーザー固有のスキル（コミットされない）
+- `saytask/streaks.yaml` — ユーザー固有のタスクデータ
 
-### Checking Before Commit
+### コミット前の確認
 
 ```bash
-# Verify your new file is tracked
+# 新しいファイルが追跡されているか確認
 git status
 
-# If your file doesn't appear, check .gitignore
+# ファイルが表示されない場合、.gitignoreを確認
 grep "your_file_name" .gitignore
 ```
 
 ---
 
-## Coding Conventions
+## コーディング規約
 
-### Shell Scripts
+### シェルスクリプト
 
-All shell scripts must adhere to these standards:
+すべてのシェルスクリプトはこれらの標準に準拠する必要があります:
 
-1. **Shellcheck compliance**
+1. **Shellcheck準拠**
    ```bash
-   # Run shellcheck before committing
+   # コミット前にshellcheckを実行
    make lint
    ```
-   - Fix all warnings and errors
-   - Use `# shellcheck disable=SCXXXX` only when absolutely necessary (with explanation)
+   - すべての警告とエラーを修正
+   - 絶対に必要な場合のみ `# shellcheck disable=SCXXXX` を使用（説明付き）
 
-2. **Shebang line**
+2. **Shebang行**
    ```bash
    #!/usr/bin/env bash
    ```
 
-3. **Error handling**
+3. **エラーハンドリング**
    ```bash
-   set -euo pipefail  # Exit on error, undefined vars, pipe failures
+   set -euo pipefail  # エラー、未定義変数、パイプ失敗で終了
    ```
 
-4. **Function documentation**
+4. **関数ドキュメント**
    ```bash
-   # Function: send_message
-   # Description: Writes a message to an agent's inbox
-   # Arguments:
+   # 関数: send_message
+   # 説明: エージェントのinboxにメッセージを書き込む
+   # 引数:
    #   $1 - target_agent (shogun|karo|ashigaru1-8)
-   #   $2 - message content
-   # Returns: 0 on success, 1 on error
+   #   $2 - メッセージ内容
+   # 戻り値: 成功時0、エラー時1
    send_message() {
        local target_agent="$1"
        local message="$2"
-       # ... implementation
+       # ... 実装
    }
    ```
 
-5. **Variable naming**
-   - `UPPERCASE` for constants and environment variables
-   - `lowercase` for local variables
-   - Use `local` for function-scoped variables
+5. **変数命名**
+   - `UPPERCASE` 定数と環境変数用
+   - `lowercase` ローカル変数用
+   - 関数スコープ変数には `local` を使用
 
-6. **Quoting**
+6. **クォート**
    ```bash
-   # Always quote variables to prevent word splitting
-   echo "$VARIABLE"         # Good
-   echo $VARIABLE           # Bad
+   # 単語分割を防ぐため、常に変数をクォート
+   echo "$VARIABLE"         # 良い
+   echo $VARIABLE           # 悪い
 
-   # Quote paths with spaces
-   cd "$PROJECT_PATH"       # Good
-   cd $PROJECT_PATH         # Bad
+   # スペースを含むパスをクォート
+   cd "$PROJECT_PATH"       # 良い
+   cd $PROJECT_PATH         # 悪い
    ```
 
-### YAML Files
+### YAMLファイル
 
-1. **Indentation**: 2 spaces (no tabs)
-2. **Booleans**: Use `true`/`false` (lowercase)
-3. **Strings**: Quote when necessary, avoid excessive quoting
-4. **Comments**: Use `#` for inline explanations
+1. **インデント**: 2スペース（タブ禁止）
+2. **ブール値**: `true`/`false` を使用（小文字）
+3. **文字列**: 必要時にクォート、過剰なクォートは避ける
+4. **コメント**: インライン説明に `#` を使用
 
-Example:
+例:
 ```yaml
-# Task assignment for ashigaru1
+# ashigaru1のタスク割当
 task:
   task_id: subtask_001
-  description: "Research React 19 features"
+  description: "React 19機能を調査"
   status: assigned
-  blockedBy: []  # No dependencies
+  blockedBy: []  # 依存関係なし
 ```
 
-### Markdown Files
+### Markdownファイル
 
-1. **Line length**: No hard limit, but aim for readability (80-120 chars for prose)
-2. **Headers**: Use ATX-style (`#` prefix)
-3. **Code blocks**: Always specify language for syntax highlighting
-4. **Links**: Use reference-style for repeated links
+1. **行の長さ**: ハードリミットなし、可読性を目指す（文章は80-120文字）
+2. **ヘッダー**: ATXスタイル（`#` プレフィックス）を使用
+3. **コードブロック**: 常にシンタックスハイライトのために言語を指定
+4. **リンク**: 繰り返しリンクには参照スタイルを使用
 
 ---
 
-## Testing
+## テスト
 
-### Test Levels
+### テストレベル
 
-The project uses a three-tier testing strategy:
+プロジェクトは3層テスト戦略を使用:
 
-| Level | Type | Tool | Location | Run Command |
+| レベル | タイプ | ツール | 場所 | 実行コマンド |
 |-------|------|------|----------|-------------|
-| L1 | Unit | bats | `tests/unit/` | `make test` |
-| L2 | Integration | bats | `tests/integration/` | `make test-int` |
-| L3 | End-to-End | Manual | N/A | Karo executes |
+| L1 | ユニット | bats | `tests/unit/` | `make test` |
+| L2 | 統合 | bats | `tests/integration/` | `make test-int` |
+| L3 | E2E | 手動 | N/A | 家老が実行 |
 
-### SKIP = FAIL Policy
+### SKIP = FAIL ポリシー
 
-**CRITICAL RULE**: A test with SKIP count >= 1 is considered FAILED.
+**重要ルール**: SKIP数 >= 1 のテストは失敗とみなされます。
 
-- Tests must either run or explicitly fail
-- Do NOT report completion if tests were skipped
-- Check prerequisites before running tests
+- テストは実行するか明示的に失敗するかのどちらか
+- テストがスキップされた場合、完了と報告しないこと
+- テスト実行前に前提条件を確認
 
-### Running Tests
+### テスト実行
 
 ```bash
-# Install test dependencies (first time only)
+# テスト依存関係をインストール（初回のみ）
 make install-deps
 
-# Run unit tests
+# ユニットテスト実行
 make test
 
-# Run integration tests (Claude Code only)
+# 統合テスト実行（Claude Codeのみ）
 make test-int
 
-# Run shellcheck linter
+# shellcheckリンター実行
 make lint
 
-# Build + diff check (CI equivalent)
+# ビルド + 差分チェック（CI相当）
 make check
 ```
 
-### Writing Tests
+### テスト作成
 
-All tests use **bats** (Bash Automated Testing System):
+すべてのテストは**bats**（Bash Automated Testing System）を使用:
 
 ```bash
 #!/usr/bin/env bats
 # test_example.bats
 
 setup() {
-    # Setup code runs before each test
+    # 各テスト前に実行されるセットアップコード
     TEST_TMP="$(mktemp -d)"
 }
 
 teardown() {
-    # Cleanup code runs after each test
+    # 各テスト後に実行されるクリーンアップコード
     rm -rf "$TEST_TMP"
 }
 
@@ -309,20 +309,20 @@ teardown() {
 }
 ```
 
-### Test Guidelines
+### テストガイドライン
 
-1. **Preflight checks**: Verify all prerequisites before running tests
+1. **事前確認**: テスト実行前にすべての前提条件を検証
    ```bash
    @test "check tmux is installed" {
        command -v tmux || skip "tmux not installed"
    }
    ```
 
-2. **Isolation**: Tests must not interfere with each other
-   - Use temporary directories (`mktemp -d`)
-   - Clean up after each test in `teardown()`
+2. **分離**: テストは相互に干渉してはならない
+   - 一時ディレクトリを使用（`mktemp -d`）
+   - `teardown()` で各テスト後にクリーンアップ
 
-3. **Assertions**: Use bats-assert for clear error messages
+3. **アサーション**: 明確なエラーメッセージのためbats-assertを使用
    ```bash
    load 'test_helper/bats-assert/load'
 
@@ -333,120 +333,120 @@ teardown() {
    }
    ```
 
-4. **E2E tests**: Only Karo can execute E2E tests (requires multi-agent control)
+4. **E2Eテスト**: 家老のみがE2Eテストを実行可能（マルチエージェント制御が必要）
 
 ---
 
-## Pull Request Guidelines
+## プルリクエストガイドライン
 
-### Before Submitting
+### 提出前に
 
-- [ ] All tests pass (`make test`, `make test-int`)
-- [ ] Shellcheck passes (`make lint`)
-- [ ] Generated instructions are in sync (`make check`)
-- [ ] New files are added to `.gitignore` whitelist
-- [ ] Commits have clear, descriptive messages
-- [ ] Documentation is updated (if applicable)
+- [ ] すべてのテストが合格（`make test`、`make test-int`）
+- [ ] Shellcheckが合格（`make lint`）
+- [ ] 生成された指示が同期されている（`make check`）
+- [ ] 新しいファイルが `.gitignore` ホワイトリストに追加されている
+- [ ] コミットが明確で説明的なメッセージを持つ
+- [ ] ドキュメントが更新されている（該当する場合）
 
-### PR Title Format
+### PRタイトル形式
 
-Use conventional commit prefixes:
+従来のコミットプレフィックスを使用:
 
 ```
-feat: add new CLI adapter for Kimi Code
-fix: resolve inbox_watcher rc=1 on atomic writes
-docs: update CONTRIBUTING.md with .gitignore rules
-test: add unit tests for cli_adapter.sh
-refactor: simplify inbox_write.sh message handling
+feat: Kimi Code用の新しいCLIアダプタを追加
+fix: atomic writeでのinbox_watcher rc=1を解決
+docs: .gitignoreルールでCONTRIBUTING.mdを更新
+test: cli_adapter.shのユニットテストを追加
+refactor: inbox_write.shのメッセージハンドリングを簡素化
 ```
 
-### PR Description Template
+### PR説明テンプレート
 
 ```markdown
-## Summary
-Brief description of what this PR does.
+## 概要
+このPRが行うことの簡単な説明。
 
-## Motivation
-Why is this change needed? What problem does it solve?
+## 動機
+この変更がなぜ必要か？どんな問題を解決するか？
 
-## Changes
-- Bullet list of key changes
-- Include file paths for context
+## 変更内容
+- 主要な変更の箇条書きリスト
+- コンテキストのためにファイルパスを含める
 
-## Testing
-- [ ] Unit tests added/updated
-- [ ] Integration tests pass
-- [ ] Manually tested (describe how)
+## テスト
+- [ ] ユニットテストを追加/更新
+- [ ] 統合テストが合格
+- [ ] 手動テスト済み（方法を説明）
 
-## Screenshots (if applicable)
-Add screenshots for UI/UX changes.
+## スクリーンショット（該当する場合）
+UI/UX変更のスクリーンショットを追加。
 
-## Related Issues
+## 関連Issue
 Closes #123
 ```
 
-### Review Process
+### レビュープロセス
 
-1. **Automated checks**: GitHub Actions will run tests and linters
-2. **Code review**: At least one maintainer review required
-3. **Testing**: Reviewers may request additional tests
-4. **Documentation**: Ensure changes are documented
+1. **自動チェック**: GitHub Actionsがテストとリンターを実行
+2. **コードレビュー**: 少なくとも1人のメンテナーレビューが必要
+3. **テスト**: レビュアーが追加テストを要求する場合あり
+4. **ドキュメント**: 変更がドキュメント化されていることを確認
 
 ---
 
-## Communication
+## コミュニケーション
 
 ### GitHub Issues
 
-Use GitHub Issues for:
-- **Bug reports** — Include reproduction steps, expected vs. actual behavior, environment details
-- **Feature requests** — Describe the use case, proposed solution, alternatives considered
-- **Questions** — Ask about implementation details, design decisions
+GitHub Issuesを以下の用途で使用:
+- **バグ報告** — 再現手順、期待される動作 vs 実際の動作、環境詳細を含める
+- **機能リクエスト** — ユースケース、提案された解決策、検討した代替案を説明
+- **質問** — 実装詳細、設計決定について質問
 
 **日本語でのイシュー報告も歓迎します** (Issues in Japanese are welcome).
 
 ### GitHub Discussions
 
-Use GitHub Discussions for:
-- Design proposals
-- Architecture questions
-- Best practices
-- Showcase your workflow
+GitHub Discussionsを以下の用途で使用:
+- 設計提案
+- アーキテクチャに関する質問
+- ベストプラクティス
+- ワークフローの紹介
 
-### Bug Report Template
+### バグ報告テンプレート
 
 ```markdown
-**Describe the bug**
-A clear description of what the bug is.
+**バグの説明**
+バグが何であるかの明確な説明。
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Run '...'
-2. See error
+**再現手順**
+動作を再現する手順:
+1. '...' を実行
+2. エラーを確認
 
-**Expected behavior**
-What you expected to happen.
+**期待される動作**
+何が起こることを期待していたか。
 
-**Actual behavior**
-What actually happened.
+**実際の動作**
+実際に何が起こったか。
 
-**Environment**
-- OS: [e.g., WSL2 Ubuntu 22.04]
-- Claude Code version: [e.g., 1.2.3]
-- Shell: [e.g., bash 5.1]
+**環境**
+- OS: [例: WSL2 Ubuntu 22.04]
+- Claude Code バージョン: [例: 1.2.3]
+- Shell: [例: bash 5.1]
 
-**Additional context**
-Any other context about the problem.
+**追加のコンテキスト**
+問題に関するその他のコンテキスト。
 ```
 
 ---
 
-## License
+## ライセンス
 
-By contributing to multi-agent-shogun, you agree that your contributions will be licensed under the [MIT License](LICENSE).
+multi-agent-shogunへの貢献により、あなたの貢献が[MITライセンス](LICENSE)の下でライセンスされることに同意したものとみなされます。
 
 ---
 
-## Credits
+## クレジット
 
-Contributions are recognized in the project README. Thank you for making multi-agent-shogun better!
+貢献はプロジェクトREADMEで認識されます。multi-agent-shogunをより良くしていただき、ありがとうございます！
